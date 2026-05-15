@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
@@ -15,8 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@/components/Button';
 import { colors } from '@/theme/colors';
-import { CATEGORY_LABEL, type ItemCategory } from '@/types';
+import { CATEGORY_LABEL, SPACE_EMOJI, type ItemCategory, type Space } from '@/types';
 import { addItem } from '@/storage/itemsStorage';
+import { loadSpaces } from '@/storage/spacesStorage';
 import type { ItemsStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<ItemsStackParamList, 'AddItem'>;
@@ -29,10 +30,16 @@ export function AddItemScreen({ navigation }: Props) {
   const [quantity, setQuantity] = useState('1');
   const [note, setNote] = useState('');
   const [photoUri, setPhotoUri] = useState<string | undefined>();
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [spaceId, setSpaceId] = useState<string | undefined>();
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
+
+  useEffect(() => {
+    loadSpaces().then(setSpaces);
+  }, []);
 
   async function openCamera() {
     if (!permission?.granted) {
@@ -76,6 +83,7 @@ export function AddItemScreen({ navigation }: Props) {
       quantity: Number.isFinite(qty) && qty > 0 ? qty : 1,
       photoUri,
       note: note.trim() || undefined,
+      spaceId,
     });
     navigation.goBack();
   }
@@ -132,6 +140,34 @@ export function AddItemScreen({ navigation }: Props) {
             );
           })}
         </View>
+
+        {spaces.length > 0 && (
+          <>
+            <Text style={styles.label}>放在哪個空間</Text>
+            <View style={styles.chips}>
+              <Pressable
+                onPress={() => setSpaceId(undefined)}
+                style={[styles.chip, !spaceId && styles.chipActive]}
+              >
+                <Text style={[styles.chipText, !spaceId && styles.chipTextActive]}>未指定</Text>
+              </Pressable>
+              {spaces.map((s) => {
+                const active = spaceId === s.id;
+                return (
+                  <Pressable
+                    key={s.id}
+                    onPress={() => setSpaceId(s.id)}
+                    style={[styles.chip, active && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      {SPACE_EMOJI[s.kind]} {s.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
 
         <Text style={styles.label}>數量</Text>
         <TextInput
