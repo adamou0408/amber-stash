@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Amber Stash",
+    "slug": "amber-stash",
+    "scheme": "amberstash",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF8EE"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.amberstash.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "用來拍攝你的物品並建立收納清單。",
+        "NSPhotoLibraryUsageDescription": "用來從相簿選擇物品照片。"
+      }
+    },
+    "android": {
+      "package": "com.amberstash.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFF8EE"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "用來拍攝你的物品並建立收納清單。"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "用來從相簿選擇物品照片。"
+        }
+      ]
+    ],
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}
