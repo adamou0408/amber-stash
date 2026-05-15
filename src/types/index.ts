@@ -34,6 +34,15 @@ export const SPACE_LABEL: Record<SpaceKind, string> = {
   other: '其他',
 };
 
+export const SPACE_EMOJI: Record<SpaceKind, string> = {
+  wardrobe: '👔',
+  drawer: '🗄️',
+  desk: '📚',
+  shelf: '🪑',
+  storage_room: '📦',
+  other: '🏷️',
+};
+
 export type Item = {
   id: string;
   name: string;

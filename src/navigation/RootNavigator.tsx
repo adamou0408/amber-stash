@@ -8,6 +8,7 @@ import { AddItemScreen } from '@/screens/AddItemScreen';
 import { SuggestionsScreen } from '@/screens/SuggestionsScreen';
 import { SpacesScreen } from '@/screens/SpacesScreen';
 import { ShoppingScreen } from '@/screens/ShoppingScreen';
+import { LabelsScreen } from '@/screens/LabelsScreen';
 import type { ItemsStackParamList } from './types';
 
 const Tabs = createBottomTabNavigator();
@@ -53,6 +54,11 @@ export function RootNavigator() {
           name="Spaces"
           component={SpacesScreen}
           options={{ title: '空間', tabBarIcon: tabIcon('🗄️') }}
+        />
+        <Tabs.Screen
+          name="Labels"
+          component={LabelsScreen}
+          options={{ title: '標籤', tabBarIcon: tabIcon('🏷️') }}
         />
         <Tabs.Screen
           name="Suggestions"
