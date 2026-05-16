@@ -39,7 +39,7 @@
 | M3 | 方法論引擎 | JSON 規則 + 切換 UI + 2 套示範方法論 | ✅ ship（commit `40cfa41`） |
 | M4 | Session + Snapshot | 防重複計算的根本架構 | ✅ 架構 ship（commit `4cbd8aa`+`dfaf2fc`+`9984df7`）· UX deferred 補齊於 M5.5 |
 | M5 | Claude Vision | 拍照辨識 → detection proposal 進 session | ✅ 架構 ship（commit `0ed0f66`）· UX deferred 補齊於 M5.5 |
-| M5.5 | UX 收尾 | 容器歧義 / 低信心強制確認 / streaming 進度 / bbox 編輯 / AddItem 拆解 | ✅ ship（commit `<M5.5>`） |
+| M5.5 | UX 收尾 | 容器歧義 / 低信心強制確認 / streaming 進度 / bbox 編輯 / AddItem 拆解 | ✅ ship（commit `ea521ef`） |
 | M6 | 方法論內容啟動 | 邀請 3-5 收納師、授權合約、訂閱金流 | 🔄 進行中 — 材料 ship（commit `07bda99`）/ 真實邀請待你動手 |
 | M7 | 客製收納箱 | 箱規格 / 訂單 / 雷雕字段 / SVG outline | ✅ 工程核心 ship（commit `ad3f0fe`，純資料 + 邏輯，無 UI；UI 下一輪） |
 | M8 | 雲端 + 上架 | Supabase / EAS / 商店 / Landing | ❌ 未啟動 |
@@ -75,21 +75,21 @@
 - [x] M6 outreach 材料 5 份：候選名單 / 授權 outline / 邀請信 / 撰寫指南 / 分潤模式
 - [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
 - [x] M7 工程核心（commit `ad3f0fe`）：`types/box.ts` / `services/box/catalog.ts`（13 SKU）/ `recommender.ts` / `svgOutline.ts`（opentype.js + Noto Sans TC 900）/ `boxOrderStorage.ts`（狀態機含合法/非法轉移驗證）+ 71 個新測試
-- [x] M5.5 容器歧義對話：`ContainerAmbiguityDialog` + `services/containerHeuristic` 純函式
-- [x] M5.5 低信心強制確認：`DetectionReviewSheet` + `services/reviewState` gating；< 0.6 不確認就無法 commit
-- [x] M5.5 Streaming 進度：`ProgressIndicator` + `useStreamingProgress` hook，3 段動畫
-- [x] M5.5 Bbox 預覽 / 編輯 UI：`BboxOverlay` + `services/bboxMath` 純函式（點 focus / 拖角 resize / 拖框 translate）
-- [x] M5.5 AddItemScreen 重構：拆 `CaptureStep` / `CameraStep` / `ReviewStep` + `useCaptureSession` hook，548 → 306 行（-44%）
-- [x] M5.5 Component 測試：jest-jsdom + @testing-library/react-native 13；4 個 component suite +1 純函式 suite（+61 tests）
-- [x] M5.5 後端 Proxy：Cloudflare Worker（`server/`），Anthropic forward + KV 配額 + sliding-window rate limit + Stripe webhook + 40 tests
-- [x] M0.5 工程衛生：CI yml（push/PR 自動跑 tsc/test/web bundle）/ App Icon 4 PNG + SVG 源 / Detox E2E baseline / README 大幅擴充
+- [x] M5.5 容器歧義對話：`ContainerAmbiguityDialog` + `services/containerHeuristic` 純函式（commit `ea521ef`）
+- [x] M5.5 低信心強制確認：`DetectionReviewSheet` + `services/reviewState` gating；< 0.6 不確認就無法 commit（commit `ea521ef`）
+- [x] M5.5 Streaming 進度：`ProgressIndicator` + `useStreamingProgress` hook，3 段動畫（commit `ea521ef`）
+- [x] M5.5 Bbox 預覽 / 編輯 UI：`BboxOverlay` + `services/bboxMath` 純函式（點 focus / 拖角 resize / 拖框 translate）（commit `ea521ef`）
+- [x] M5.5 AddItemScreen 重構：拆 `CaptureStep` / `CameraStep` / `ReviewStep` + `useCaptureSession` hook，548 → 306 行（-44%）（commit `ea521ef`）
+- [x] M5.5 Component 測試：jest-jsdom + @testing-library/react-native 13；4 個 component suite +1 純函式 suite（+61 tests，共 113 tests）（commit `ea521ef`）
+- [x] M5.5 後端 Proxy：Cloudflare Worker（`server/`），Anthropic forward + KV 配額 + sliding-window rate limit + Stripe webhook + 40 tests（commit `e76b945`）
+- [x] M0.5 工程衛生：CI yml（push/PR 自動跑 tsc/test/web bundle）/ App Icon 4 PNG + SVG 源 / Detox E2E baseline / README 大幅擴充（commit `c17aa02`）
 
 ### ⚠️ 架構做了但 UX/功能未完整
 
-- [x] M4 容器歧義 UI（辨識到收納盒時詢問展開／不展開） — ship M5.5（commit `<M5.5>`）
-- [x] M4 低信心強制確認對話（confidence < 0.6 必須點一下） — ship M5.5（commit `<M5.5>`）
-- [x] M5 Streaming 進度條（vision call 5-10 秒） — ship M5.5（commit `<M5.5>`）
-- [x] M5 Bbox 預覽 / 編輯 UI — ship M5.5（commit `<M5.5>`）
+- [x] M4 容器歧義 UI（辨識到收納盒時詢問展開／不展開） — ship M5.5（commit `ea521ef`）
+- [x] M4 低信心強制確認對話（confidence < 0.6 必須點一下） — ship M5.5（commit `ea521ef`）
+- [x] M5 Streaming 進度條（vision call 5-10 秒） — ship M5.5（commit `ea521ef`）
+- [x] M5 Bbox 預覽 / 編輯 UI — ship M5.5（commit `ea521ef`）
 - [ ] M5 Server-side proxy 實際部署（Cloudflare Worker / Vercel function） (deferred → M5.5+)
 - [ ] M5 黃金測試集（10 張人工標註照片做 vision 迴歸） (deferred → M5.5+，需要使用者提供照片)
 - [ ] M5 真實 Claude API 端對端驗證（環境沒 key，只跑了 mock + 解析） (deferred → 使用者本機驗)
