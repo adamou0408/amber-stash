@@ -1,0 +1,41 @@
+# Cloudflare Worker config for Amber Stash Anthropic API proxy.
+#
+# Replace the placeholder KV namespace IDs (kv_namespace_id_placeholder_*) with the
+# real ones you get from `wrangler kv namespace create <NAME>` before deploying.
+# Secrets (ANTHROPIC_API_KEY, STRIPE_WEBHOOK_SECRET) are NOT declared here —
+# set them via `wrangler secret put <NAME>` after the first deploy.
+name = "amber-stash-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Default model — clients can still pass their own `model` in the body and it
+# will be forwarded; this is only the fallback when a request omits it.
+[vars]
+ANTHROPIC_MODEL_DEFAULT = "claude-sonnet-4-5"
+ANTHROPIC_VERSION = "2023-06-01"
+FREE_MONTHLY_QUOTA = "10"
+RATE_LIMIT_PER_MIN = "60"
+# Comma-separated origins allowed via CORS. Use "*" to allow all (dev only).
+ALLOWED_ORIGINS = "*"
+
+# KV namespaces — create with:
+#   wrangler kv namespace create QUOTA_KV
+#   wrangler kv namespace create RATE_LIMIT_KV
+#   wrangler kv namespace create USER_TIER_KV
+# then paste the returned IDs below.
+[[kv_namespaces]]
+binding = "QUOTA_KV"
+id = "kv_namespace_id_placeholder_quota"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "kv_namespace_id_placeholder_ratelimit"
+
+[[kv_namespaces]]
+binding = "USER_TIER_KV"
+id = "kv_namespace_id_placeholder_usertier"
+
+# Observability — turn on for prod so console.* shows up in `wrangler tail`.
+[observability]
+enabled = true
