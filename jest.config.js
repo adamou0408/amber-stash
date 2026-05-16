@@ -10,6 +10,7 @@ module.exports = {
     '^react-native-uuid$': '<rootDir>/src/__test_mocks__/uuid.ts',
     '^@react-native-async-storage/async-storage$':
       '<rootDir>/src/__test_mocks__/asyncStorage.ts',
+    '^expo-constants$': '<rootDir>/src/__test_mocks__/expoConstants.ts',
   },
   transform: {
     '^.+\\.tsx?$': [

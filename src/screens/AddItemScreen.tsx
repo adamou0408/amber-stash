@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Pressable,
@@ -27,6 +28,9 @@ import {
   loadLatestSnapshotForSpace,
 } from '@/storage/sessionStorage';
 import { detectAnomalies } from '@/services/anomaly';
+import { recognizeItems } from '@/services/ai/recognizeItems';
+import { QuotaExceededError } from '@/services/ai/quota';
+import { getActiveBackend } from '@/services/ai/config';
 import type { ItemsStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<ItemsStackParamList, 'AddItem'>;
@@ -50,6 +54,11 @@ export function AddItemScreen({ navigation }: Props) {
   // ---------- session state ----------
   const [mode, setMode] = useState<Mode>('capture');
   const [pendings, setPendings] = useState<PendingDetection[]>([]);
+
+  // ---------- AI ----------
+  const [photoBase64, setPhotoBase64] = useState<string | undefined>();
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiHint, setAiHint] = useState<string | undefined>();
 
   // ---------- camera ----------
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -75,10 +84,12 @@ export function AddItemScreen({ navigation }: Props) {
 
   async function takePhoto() {
     if (!cameraRef) return;
-    const photo = await cameraRef.takePictureAsync({ quality: 0.6 });
+    const photo = await cameraRef.takePictureAsync({ quality: 0.6, base64: true });
     if (photo?.uri) {
       setPhotoUri(photo.uri);
+      setPhotoBase64(photo.base64);
       setCameraOpen(false);
+      setAiHint(undefined);
     }
   }
 
@@ -86,9 +97,50 @@ export function AddItemScreen({ navigation }: Props) {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.6,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
       setPhotoUri(result.assets[0].uri);
+      setPhotoBase64(result.assets[0].base64 ?? undefined);
+      setAiHint(undefined);
+    }
+  }
+
+  async function onRecognize() {
+    if (!photoUri || !photoBase64) {
+      Alert.alert('沒有照片', '請先拍照或選照片。');
+      return;
+    }
+    if (!spaceId) {
+      Alert.alert('請先選空間', 'AI 辨識結果會進到 session，要先指定空間。');
+      return;
+    }
+    setAiBusy(true);
+    setAiHint(undefined);
+    try {
+      const result = await recognizeItems({ photoUri, base64: photoBase64 });
+      if (result.detections.length === 0) {
+        setAiHint('AI 沒辨識到任何物品。試試另一張照片，或手動加入。');
+        return;
+      }
+      setPendings((prev) => [...result.detections, ...prev]);
+      const lowConf = result.detections.filter((d) => d.confidence < 0.6).length;
+      const backendLabel =
+        result.backend === 'mock' ? '（mock 模式 — 未設 API key）' : `（${result.backend}）`;
+      const quotaLabel =
+        result.backend === 'mock'
+          ? ''
+          : ` · 配額 ${result.quotaUsed}/${result.quotaLimit}`;
+      const lowConfLabel = lowConf > 0 ? ` · ${lowConf} 筆低信心請確認` : '';
+      setAiHint(`✓ 加入 ${result.detections.length} 筆 ${backendLabel}${quotaLabel}${lowConfLabel}`);
+    } catch (err) {
+      if (err instanceof QuotaExceededError) {
+        Alert.alert('本月配額已用完', err.message);
+      } else {
+        Alert.alert('AI 識別失敗', err instanceof Error ? err.message : String(err));
+      }
+    } finally {
+      setAiBusy(false);
     }
   }
 
@@ -97,6 +149,7 @@ export function AddItemScreen({ navigation }: Props) {
     setQuantity('1');
     setNote('');
     setPhotoUri(undefined);
+    setPhotoBase64(undefined);
   }
 
   /**
@@ -268,6 +321,28 @@ export function AddItemScreen({ navigation }: Props) {
           <Button title="拍照" onPress={openCamera} style={styles.rowBtn} />
           <Button title="從相簿選" variant="secondary" onPress={pickFromLibrary} style={styles.rowBtn} />
         </View>
+
+        {photoUri ? (
+          <View style={styles.aiBox}>
+            <Pressable
+              onPress={onRecognize}
+              disabled={aiBusy}
+              style={[styles.aiBtn, aiBusy && styles.aiBtnDisabled]}
+            >
+              {aiBusy ? (
+                <View style={styles.row}>
+                  <ActivityIndicator color="#fff" />
+                  <Text style={styles.aiBtnText}>  AI 辨識中…</Text>
+                </View>
+              ) : (
+                <Text style={styles.aiBtnText}>
+                  🤖 用 AI 辨識這張照片{getActiveBackend() === 'mock' ? '（mock）' : ''}
+                </Text>
+              )}
+            </Pressable>
+            {aiHint ? <Text style={styles.aiHint}>{aiHint}</Text> : null}
+          </View>
+        ) : null}
 
         <Text style={styles.label}>物品名稱</Text>
         <TextInput
@@ -459,4 +534,15 @@ const styles = StyleSheet.create({
   pendingMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   pendingNote: { fontSize: 12, color: colors.text, marginTop: 4 },
   reviewActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  aiBox: { marginBottom: 12 },
+  aiBtn: {
+    backgroundColor: colors.accent,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiBtnDisabled: { opacity: 0.6 },
+  aiBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  aiHint: { fontSize: 12, color: colors.textMuted, marginTop: 8, lineHeight: 18 },
 });
