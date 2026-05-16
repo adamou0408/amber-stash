@@ -53,8 +53,16 @@
 
 ## 現況 Snapshot
 
-> 隨每次 ship 更新；最後同步：2026-05-16（M5.5 UX 完成 + M7 工程核心 + M5.5 proxy + M0.5 hygiene 一次整合）
+> 隨每次 ship 更新；最後同步：2026-05-16（5 個 UX 痛點修完 — onboarding / settings tab / quota pill / always-session / 方法論前置）
 > 規則：完成項目要打 `[x]`、延後項目維持 `[ ]` 並標 `(deferred → M?)`
+
+### 🪄 UX Polish（M5.5 後續，本輪 ship）
+
+- [x] **Onboarding 3 步流程**（`OnboardingScreen`）：welcome → 選方法論 → 載入示範資料 or 從頭開始 — 第一次開 app 強制走，完成寫 `onboardingStorage`
+- [x] **拿掉 legacy quick-save 分支**：AddItem 永遠走 session/snapshot，不選空間時顯示「請先選 / 去建立」hint
+- [x] **QuotaPill 永久顯示**：AddItem 標題附近 + Settings 內，顯示 mock/used/limit 三態色
+- [x] **Settings tab**：6th tab，含方法論切換、AI backend 狀態、資料管理（load demo / clear all / reset onboarding）
+- [x] **方法論前置**：onboarding 第二步就選方法論 + Settings 隨時可換，不再是「建議」tab 內藏深的 chip
 
 ### ✅ 已 ship
 

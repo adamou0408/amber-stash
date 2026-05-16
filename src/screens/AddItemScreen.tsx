@@ -19,6 +19,7 @@ import { recognizeItems } from '@/services/ai/recognizeItems';
 import { QuotaExceededError } from '@/services/ai/quota';
 import { useCaptureSession } from '@/hooks/useCaptureSession';
 import { useStreamingProgress } from '@/hooks/useStreamingProgress';
+import { QuotaPill } from '@/components/QuotaPill';
 import type { ItemsStackParamList } from '@/navigation/types';
 import { CameraStep } from './addItem/CameraStep';
 import { CaptureStep } from './addItem/CaptureStep';
@@ -32,8 +33,9 @@ type Props = NativeStackScreenProps<ItemsStackParamList, 'AddItem'>;
  * 把原本一個 480-行 god component 拆成三個 step component（capture / camera /
  * review）+ 兩個 hook（useCaptureSession / useStreamingProgress）。
  *
- *   - 未選空間 → 走 legacy quick-save（單筆 Item 直接寫進 itemsStorage）
- *   - 選了空間 → 走 session 流：capture → review → commit snapshot + items 同步
+ * 永遠走 session/snapshot 流程（M5.5 後拿掉 legacy quick-save 分支）：
+ *   capture → review → commit snapshot
+ * commit 時同步 addItem 維持 ItemsScreen 的 reads 正常顯示
  *
  * UX deferred 整批還清（M5.5）：
  *   - DetectionReviewSheet 處理低信心強制確認 + 右滑刪除 + 行內編輯
@@ -62,6 +64,7 @@ export function AddItemScreen({ navigation }: Props) {
   // ---------- AI ----------
   const [aiBusy, setAiBusy] = useState(false);
   const [aiHint, setAiHint] = useState<string | undefined>();
+  const [quotaBump, setQuotaBump] = useState(0);
   const progress = useStreamingProgress();
 
   useEffect(() => {
@@ -121,6 +124,7 @@ export function AddItemScreen({ navigation }: Props) {
         return;
       }
       session.addBatch(result.detections);
+      setQuotaBump((n) => n + 1);
       const lowConf = result.detections.filter((d) => d.confidence < 0.6).length;
       const backendLabel =
         result.backend === 'mock' ? '（mock 模式 — 未設 API key）' : `（${result.backend}）`;
@@ -166,23 +170,10 @@ export function AddItemScreen({ navigation }: Props) {
     setNote('');
   }, [name, spaceId, quantity, category, photoUri, note, session]);
 
-  // ---------- quick-save legacy (no space selected) ----------
-  const onQuickSaveLegacy = useCallback(async () => {
-    if (!name.trim()) {
-      Alert.alert('物品名稱必填');
-      return;
-    }
-    const qty = Number.parseInt(quantity, 10);
-    await addItem({
-      name: name.trim(),
-      category,
-      quantity: Number.isFinite(qty) && qty > 0 ? qty : 1,
-      photoUri,
-      note: note.trim() || undefined,
-      spaceId,
-    });
-    navigation.goBack();
-  }, [name, quantity, category, photoUri, note, spaceId, navigation]);
+  // ---------- 沒空間時導去建立 ----------
+  const onGoToSpaces = useCallback(() => {
+    navigation.getParent()?.navigate('Spaces');
+  }, [navigation]);
 
   // ---------- review + commit ----------
   const onGoReview = useCallback(() => {
@@ -294,8 +285,9 @@ export function AddItemScreen({ navigation }: Props) {
         onRecognize={onRecognize}
         onAddToSession={onAddToSession}
         onGoReview={onGoReview}
-        onQuickSaveLegacy={onQuickSaveLegacy}
+        onGoToSpaces={onGoToSpaces}
         onRemovePending={session.remove}
+        headerSlot={<QuotaPill bumpToken={quotaBump} />}
       />
     </SafeAreaView>
   );

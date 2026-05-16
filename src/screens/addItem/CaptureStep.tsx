@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { ProgressIndicator, type ProgressStage } from '@/components/ProgressIndicator';
@@ -37,8 +38,10 @@ type Props = {
   onRecognize: () => void;
   onAddToSession: () => void;
   onGoReview: () => void;
-  onQuickSaveLegacy: () => void;
+  onGoToSpaces: () => void;
   onRemovePending: (id: string) => void;
+  /** 最上方的 hero 區塊（傳 QuotaPill 進來顯示 AI 配額狀態）。 */
+  headerSlot?: ReactNode;
 };
 
 export function CaptureStep({
@@ -63,11 +66,13 @@ export function CaptureStep({
   onRecognize,
   onAddToSession,
   onGoReview,
-  onQuickSaveLegacy,
+  onGoToSpaces,
   onRemovePending,
+  headerSlot,
 }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      {headerSlot ? <View style={styles.headerSlot}>{headerSlot}</View> : null}
       <PhotoZone photoUri={photoUri} onCamera={onOpenCamera} onLibrary={onPickFromLibrary} />
 
       {photoUri ? (
@@ -114,7 +119,19 @@ export function CaptureStep({
           />
         </>
       ) : (
-        <Button title="儲存" onPress={onQuickSaveLegacy} style={{ marginTop: 16 }} />
+        <View style={styles.requireSpaceCard}>
+          <Text style={styles.requireSpaceTitle}>
+            {spaces.length === 0 ? '還沒有任何空間' : '請先選一個空間'}
+          </Text>
+          <Text style={styles.requireSpaceBody}>
+            {spaces.length === 0
+              ? 'Amber Stash 用「快照」管你的物品 — 必須先有空間（衣櫃 / 抽屜 / 書桌等）才能存進去，這樣才不會重複計算。'
+              : '從上面的清單挑一個空間，這次新增的物品會放進去。'}
+          </Text>
+          {spaces.length === 0 ? (
+            <Button title="去建立第一個空間" onPress={onGoToSpaces} style={{ marginTop: 12 }} />
+          ) : null}
+        </View>
       )}
     </ScrollView>
   );
@@ -310,6 +327,17 @@ function PendingList({
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
+  headerSlot: { marginBottom: 12 },
+  requireSpaceCard: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  requireSpaceTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
+  requireSpaceBody: { fontSize: 12, color: colors.textMuted, marginTop: 6, lineHeight: 17 },
   photoBox: {
     height: 200,
     borderRadius: 14,

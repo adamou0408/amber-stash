@@ -5,4 +5,5 @@ export const STORAGE_KEYS = {
   sessions: 'amberstash.sessions.v1',
   snapshots: 'amberstash.snapshots.v1',
   boxOrders: 'amberstash.boxOrders.v1',
+  onboarding: 'amberstash.onboarding.v1',
 } as const;
