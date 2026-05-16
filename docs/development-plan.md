@@ -34,16 +34,118 @@
 
 | # | 名稱 | 主要交付 | 狀態 |
 |---|---|---|---|
-| M1 | 骨架 | Expo 專案 + 5 tab + AsyncStorage CRUD | ✅ |
-| M2 | 可用 MVP | 物品↔空間關聯 + 示範資料 + 標籤列印 | ✅ |
-| M3 | 方法論引擎 | JSON 規則 + 切換 UI + 2 套示範方法論 | ✅ |
-| **M4** | Session + Snapshot | 防重複計算的根本架構 | ⏳ next |
-| **M5** | Claude Vision | 拍照辨識 → detection proposal 進 session | 規劃中 |
-| **M6** | 方法論內容啟動 | 邀請 3-5 收納師、授權合約、訂閱金流 | 規劃中（與 M5 並行） |
-| M7 | 客製收納箱 | 箱規格 / 訂單 / 雷雕字段 / SVG outline | 規劃中 |
-| M8 | 雲端 + 上架 | Supabase / EAS / 商店 / Landing | 未啟動 |
+| M1 | 骨架 | Expo 專案 + 5 tab + AsyncStorage CRUD | ✅ ship（commit `618b09b`） |
+| M2 | 可用 MVP | 物品↔空間關聯 + 示範資料 + 標籤列印 | ✅ ship（commit `fc7f9bf` / `7268cec`） |
+| M3 | 方法論引擎 | JSON 規則 + 切換 UI + 2 套示範方法論 | ✅ ship（commit `40cfa41`） |
+| M4 | Session + Snapshot | 防重複計算的根本架構 | ✅ 架構 ship（commit `4cbd8aa`+`dfaf2fc`+`9984df7`） · ⚠️ UX 部分延後 |
+| M5 | Claude Vision | 拍照辨識 → detection proposal 進 session | ✅ 架構 ship（commit `0ed0f66`） · ⚠️ UX 部分延後 |
+| M6 | 方法論內容啟動 | 邀請 3-5 收納師、授權合約、訂閱金流 | 🔄 進行中 — 材料 ship（commit `07bda99`）/ 真實邀請待你動手 |
+| M7 | 客製收納箱 | 箱規格 / 訂單 / 雷雕字段 / SVG outline | ❌ 未啟動 |
+| M8 | 雲端 + 上架 | Supabase / EAS / 商店 / Landing | ❌ 未啟動 |
+| **M0.5** | 工程衛生 | CI / 真機驗證 / 效能 profiling / App Icon | ❌ 未啟動（橫切，分散在各 milestone） |
 
 依賴關係：M1 → M2 → M3 → M4 → M5 → M7 → M8；M3 → M6（與 M5 並行）
+
+詳細「已交付 / 已延後」清單見下方 **〈現況 Snapshot〉** 一節。
+
+---
+
+## 現況 Snapshot
+
+> 隨每次 ship 更新；最後同步：2026-05-15（HEAD `61a8138`）
+> 規則：完成項目要打 `[x]`、延後項目維持 `[ ]` 並標 `(deferred → M?)`
+
+### ✅ 已 ship
+
+- [x] M1 骨架：Expo 54 / RN 0.81 / TS strict / 5 tab / AsyncStorage CRUD
+- [x] M2 物品↔空間關聯：AddItem 空間 chip、ItemsScreen 空間 pill、demo data 載入
+- [x] M2 標籤列印：5 空間多選 / 3 尺寸 / Noto Sans TC 900 / QR + PDF + 列印
+- [x] M3 方法論引擎：`Methodology` / `Expert` / `DecisionRule` / 規則評估器 + 模板填詞
+- [x] M3 2 套示範方法論：`amberstash-default`（免費）+ `konmari-zh`（NT$79/月 placeholder）
+- [x] M3 建議頁切換 + attribution 卡 + 偏好持久化
+- [x] M4 Session + Snapshot 資料模型 + storage CRUD + dedup（IOU > 0.5）+ anomaly 偵測
+- [x] M4 AddItem 雙模式：選空間走 session/snapshot、未選 fallback quick-save
+- [x] M4 Jest + ts-jest 設定 + 4 個測試 suite（39 tests）
+- [x] M5 AI service 層：config / claudeClient / recognizeItems / mockDetections / quota
+- [x] M5 三層 backend 回退：proxy / direct / mock
+- [x] M5 AddItem「🤖 AI 辨識」按鈕串接 session pendings
+- [x] M5 配額管理 + QuotaExceededError + 月份 rollover
+- [x] M5 AI service 單元測試（+13 tests，共 52 tests）
+- [x] M6 outreach 材料 5 份：候選名單 / 授權 outline / 邀請信 / 撰寫指南 / 分潤模式
+- [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
+
+### ⚠️ 架構做了但 UX/功能未完整
+
+- [ ] M4 容器歧義 UI（辨識到收納盒時詢問展開／不展開） (deferred → M5.5)
+- [ ] M4 低信心強制確認對話（confidence < 0.6 必須點一下） (deferred → M5.5)
+- [ ] M5 Streaming 進度條（vision call 5-10 秒，目前只 spinner） (deferred → M5.5)
+- [ ] M5 Bbox 預覽 / 編輯 UI（資料層備好，UI 沒畫） (deferred → M5.5)
+- [ ] M5 Server-side proxy 實際部署（Cloudflare Worker / Vercel function） (deferred → M5.5)
+- [ ] M5 黃金測試集（10 張人工標註照片做 vision 迴歸） (deferred → M5.5，需要使用者提供照片)
+- [ ] M5 真實 Claude API 端對端驗證（環境沒 key，只跑了 mock + 解析） (deferred → 使用者本機驗)
+- [ ] M6 方法論列表頁 / 作者頁 UI（資料模型完整、UI 沒做） (deferred → M6.5)
+- [ ] M6 訂閱金流（Stripe / IAP） (deferred → M6.5)
+
+### ❌ 完全未啟動
+
+- [ ] M6 真實邀請 3-5 位收納師（材料 ready，需要使用者親自談）
+- [ ] M6 律師 review 授權合約 outline 第 1.3 / 2.2 / 7.3 條
+- [ ] M7 客製收納箱：`types/box.ts` / `services/box.ts` / 訂單流程 / SVG outline 雷雕字
+- [ ] M7 雷雕工廠合作關係（需使用者談）
+- [ ] M8 Supabase Auth + Postgres、Repository 介面換實作
+- [ ] M8 家庭群組 ACL
+- [ ] M8 EAS Build + Submit
+- [ ] M8 App Store / Google Play 上架（需 Apple / Google 開發者帳號）
+- [ ] M8 Landing page（amberstash.com + waitlist）
+- [ ] M8 隱私政策 / 服務條款（需律師）
+- [ ] M8 埋點（PostHog / Mixpanel）
+
+### 🩺 M0.5 工程衛生（橫切，隨時可補）
+
+- [ ] App Icon / Splash / Adaptive Icon PNG（目前用 Expo 預設）
+- [ ] GitHub Actions CI（push / PR 自動跑 tsc + test + web bundle）
+- [ ] E2E 測試（Detox / Maestro，Plan 原訂 M3.5 後上但未做）
+- [ ] 真實 iOS / Android 模擬器跑 smoke test（環境只跑得了 web bundle）
+- [ ] 效能 profiling（大量物品 > 500 筆下 FlatList 表現）
+- [ ] 把 `KONMARI_METHODOLOGY` 的 placeholder 換成真實授權內容（屬 M6）
+
+---
+
+## 跨 Session 接手指南
+
+> 給之後接手的 Claude / 人類工程師看。
+> 目的：**不用 grep commit log 也能 30 秒搞清楚現況**
+
+### Step 1 · 看現況
+- 讀本文件的「現況 Snapshot」section — 那就是真實狀態
+- `git log --oneline d321548..HEAD` 看新增 commit
+
+### Step 2 · 看資料模型
+- `src/types/index.ts` — Item / Space / ShoppingItem
+- `src/types/methodology.ts` — Methodology / Expert / DecisionRule
+- `src/types/snapshot.ts` — Session / Detection / Snapshot
+
+### Step 3 · 看商業邏輯
+- `src/services/methodologyEngine.ts` — 規則評估
+- `src/services/methodologies/{default,konmari,index}.ts` — 已內建方法論
+- `src/services/ai/recognizeItems.ts` — vision 入口（內部會用 mock 或 real）
+- `src/services/dedup.ts` + `anomaly.ts` — snapshot 寫入前的純函式
+
+### Step 4 · 看現有測試
+- `npm test` — 52 tests
+- 不要破壞既有 test，新功能要加新 test
+
+### Step 5 · 動工前的三問
+- **這項目在「現況 Snapshot」哪個 section？** 已 ship / 已延後 / 未啟動？
+- **驗收標準是什麼？** 看對應 milestone 段落的「驗收標準」
+- **動完要怎麼驗證？** 至少跑驗收三層（tsc / jest / web bundle），標 `[x]`、commit + push
+
+### Step 6 · ship 後一定要做
+- 在「現況 Snapshot」對應條目把 `[ ]` 改成 `[x]`
+- 寫 commit hash 進去（讓下個 session 可以回溯）
+- 更新本文件最後同步日期與 HEAD
+
+> **金句**：plan = 真實狀態。如果你發現 plan 跟 code 不同，**修 plan 而非 code**（除非那是 bug）。
 
 ---
 
