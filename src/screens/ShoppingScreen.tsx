@@ -21,6 +21,7 @@ import {
 } from '@/storage/shoppingStorage';
 import { loadItems } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
+import { loadPreferences } from '@/storage/preferencesStorage';
 import { generateShoppingPicks } from '@/services/suggestions';
 import type { ShoppingItem } from '@/types';
 
@@ -30,9 +31,14 @@ export function ShoppingScreen() {
   const [name, setName] = useState('');
 
   const refresh = useCallback(async () => {
-    const [list, allItems, spaces] = await Promise.all([loadShopping(), loadItems(), loadSpaces()]);
+    const [list, allItems, spaces, prefs] = await Promise.all([
+      loadShopping(),
+      loadItems(),
+      loadSpaces(),
+      loadPreferences(),
+    ]);
     setItems(list);
-    setPicks(generateShoppingPicks(allItems, spaces));
+    setPicks(generateShoppingPicks(allItems, spaces, prefs.activeMethodologyId));
   }, []);
 
   useFocusEffect(
