@@ -41,3 +41,10 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Detox artifacts (screenshots / videos from failed E2E runs)
+artifacts/
+e2e/artifacts/
+
+# CI scratch
+/web-build/

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Amber Stash App Icon — source vector
+  Palette:
+    - Amber (primary):   #C8821A
+    - Dark roast wood:   #3D2F1F
+    - Cream background:  #FFF8EE
+    - Card cream accent: #FFF3DD
+  Style: Muji × Notion clean & warm. Isometric storage box + small label tag.
+  Canvas: 1024×1024 (also exported at smaller sizes via scripts/generate-icons.ts).
+-->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1024 1024"
+  width="1024"
+  height="1024"
+  shape-rendering="geometricPrecision"
+>
+  <!-- Soft cream background -->
+  <rect width="1024" height="1024" fill="#C8821A" />
+
+  <!-- Inner rounded plate gives the icon a calmer feel against home screens -->
+  <rect x="96" y="96" width="832" height="832" rx="180" ry="180" fill="#FFF8EE" />
+
+  <!--
+    Isometric storage box.
+    Constructed from three rhombuses — top lid, left face, right face.
+    Box footprint centered roughly at (512, 560).
+  -->
+  <g stroke="#3D2F1F" stroke-linejoin="round" stroke-linecap="round" stroke-width="22" fill="#FFF3DD">
+    <!-- Top lid (rhombus): apex-up at y=300, sides at y=420, bottom-tip at y=540 -->
+    <polygon points="512,300 760,420 512,540 264,420" fill="#C8821A" />
+
+    <!-- Left face -->
+    <polygon points="264,420 512,540 512,800 264,680" fill="#FFF3DD" />
+
+    <!-- Right face (slightly darker cream for depth) -->
+    <polygon points="760,420 512,540 512,800 760,680" fill="#F2E2C2" />
+  </g>
+
+  <!--
+    Inner lid line — a thin highlight that hints at the lid edge / slot opening.
+    Drawn as two short strokes to read as "container" rather than "ball".
+  -->
+  <g stroke="#3D2F1F" stroke-linecap="round" stroke-width="14" fill="none" opacity="0.55">
+    <line x1="352" y1="438" x2="512" y2="516" />
+    <line x1="672" y1="438" x2="512" y2="516" />
+  </g>
+
+  <!--
+    Label tag — small rounded rectangle tied to the front-top edge of the box
+    with a single string. This is the "stash" tagged with a label.
+  -->
+  <g>
+    <!-- String -->
+    <path
+      d="M 512 540 L 612 612"
+      stroke="#3D2F1F"
+      stroke-width="14"
+      stroke-linecap="round"
+      fill="none"
+    />
+
+    <!-- Tag body -->
+    <g transform="translate(612 612) rotate(28)">
+      <rect
+        x="0"
+        y="-58"
+        width="220"
+        height="116"
+        rx="22"
+        ry="22"
+        fill="#FFF8EE"
+        stroke="#3D2F1F"
+        stroke-width="18"
+      />
+      <!-- Punch hole -->
+      <circle cx="24" cy="0" r="10" fill="#3D2F1F" />
+      <!-- Two short lines suggesting handwritten label text -->
+      <line x1="64" y1="-18" x2="186" y2="-18" stroke="#3D2F1F" stroke-width="14" stroke-linecap="round" />
+      <line x1="64" y1="18" x2="150" y2="18" stroke="#C8821A" stroke-width="14" stroke-linecap="round" />
+    </g>
+  </g>
+</svg>
