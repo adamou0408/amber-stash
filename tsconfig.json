@@ -8,5 +8,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "web-build", "dist", "scripts", "e2e"]
+  "exclude": ["node_modules", "web-build", "dist", "scripts", "e2e", "server"]
 }

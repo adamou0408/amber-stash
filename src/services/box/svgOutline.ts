@@ -68,10 +68,13 @@ let cachedFont: opentype.Font | null = null;
  * 兩種環境的載入策略不一樣，但 SVG 產生邏輯一致，所以把字型 inject 出來。
  */
 export function setEngravingFont(buffer: ArrayBuffer | Uint8Array): void {
-  const ab =
-    buffer instanceof ArrayBuffer
-      ? buffer
-      : buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+  // Avoid `instanceof ArrayBuffer` — fails across realms (jsdom vs node).
+  // Normalize via Uint8Array view then extract its underlying segment.
+  const u8 =
+    buffer && typeof (buffer as Uint8Array).byteOffset === 'number'
+      ? (buffer as Uint8Array)
+      : new Uint8Array(buffer as ArrayBuffer);
+  const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
   cachedFont = opentype.parse(ab);
 }
 
