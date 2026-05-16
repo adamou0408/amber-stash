@@ -6,17 +6,28 @@ type Props = PressableProps & {
   variant?: 'primary' | 'secondary' | 'danger';
 };
 
-export function Button({ title, variant = 'primary', style, ...rest }: Props) {
+export function Button({ title, variant = 'primary', style, disabled, onPress, ...rest }: Props) {
   const bg =
     variant === 'primary' ? colors.primary : variant === 'danger' ? colors.danger : colors.surface;
   const fg = variant === 'secondary' ? colors.text : '#fff';
   const border = variant === 'secondary' ? colors.border : 'transparent';
+  // Disabled buttons swallow press at the composite layer too — so tests / parent
+  // press handlers cannot accidentally re-enter the button when it's grey.
+  const safeOnPress = disabled ? undefined : onPress;
   return (
     <Pressable
       {...rest}
+      onPress={safeOnPress}
+      disabled={disabled}
+      accessibilityState={{ disabled: !!disabled }}
+      pointerEvents={disabled ? 'none' : 'auto'}
       style={(state) => [
         styles.btn,
-        { backgroundColor: bg, borderColor: border, opacity: state.pressed ? 0.85 : 1 },
+        {
+          backgroundColor: bg,
+          borderColor: border,
+          opacity: disabled ? 0.45 : state.pressed ? 0.85 : 1,
+        },
         typeof style === 'function' ? style(state) : style,
       ]}
     >
