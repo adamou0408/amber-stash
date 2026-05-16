@@ -21,6 +21,7 @@ import {
 } from '@/storage/shoppingStorage';
 import { loadItems } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
+import { loadLatestSnapshotMap } from '@/storage/sessionStorage';
 import { loadPreferences } from '@/storage/preferencesStorage';
 import { generateShoppingPicks } from '@/services/suggestions';
 import type { ShoppingItem } from '@/types';
@@ -37,8 +38,9 @@ export function ShoppingScreen() {
       loadSpaces(),
       loadPreferences(),
     ]);
+    const latestMap = await loadLatestSnapshotMap(spaces.map((s) => s.id));
     setItems(list);
-    setPicks(generateShoppingPicks(allItems, spaces, prefs.activeMethodologyId));
+    setPicks(generateShoppingPicks(allItems, spaces, prefs.activeMethodologyId, latestMap));
   }, []);
 
   useFocusEffect(

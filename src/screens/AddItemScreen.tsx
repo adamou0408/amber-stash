@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -11,20 +11,34 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import uuid from 'react-native-uuid';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@/components/Button';
 import { colors } from '@/theme/colors';
 import { CATEGORY_LABEL, SPACE_EMOJI, type ItemCategory, type Space } from '@/types';
+import type { Detection } from '@/types/snapshot';
 import { addItem } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
+import {
+  addDetectionToSession,
+  commitSnapshot,
+  createSession,
+  loadLatestSnapshotForSpace,
+} from '@/storage/sessionStorage';
+import { detectAnomalies } from '@/services/anomaly';
 import type { ItemsStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<ItemsStackParamList, 'AddItem'>;
 
 const CATEGORIES = Object.keys(CATEGORY_LABEL) as ItemCategory[];
 
+type Mode = 'capture' | 'review';
+
+type PendingDetection = Omit<Detection, 'id'> & { id: string };
+
 export function AddItemScreen({ navigation }: Props) {
+  // ---------- inputs ----------
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ItemCategory>('other');
   const [quantity, setQuantity] = useState('1');
@@ -33,6 +47,11 @@ export function AddItemScreen({ navigation }: Props) {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [spaceId, setSpaceId] = useState<string | undefined>();
 
+  // ---------- session state ----------
+  const [mode, setMode] = useState<Mode>('capture');
+  const [pendings, setPendings] = useState<PendingDetection[]>([]);
+
+  // ---------- camera ----------
   const [cameraOpen, setCameraOpen] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
@@ -40,6 +59,8 @@ export function AddItemScreen({ navigation }: Props) {
   useEffect(() => {
     loadSpaces().then(setSpaces);
   }, []);
+
+  const canReview = pendings.length > 0 && !!spaceId;
 
   async function openCamera() {
     if (!permission?.granted) {
@@ -71,7 +92,50 @@ export function AddItemScreen({ navigation }: Props) {
     }
   }
 
-  async function onSave() {
+  function resetCurrentInputs() {
+    setName('');
+    setQuantity('1');
+    setNote('');
+    setPhotoUri(undefined);
+  }
+
+  /**
+   * 把目前輸入丟進 pending list（= session 暫存）。
+   * 還沒寫進 storage —— 只在 commit 時才寫 snapshot。
+   */
+  function onAddToSession() {
+    if (!name.trim()) {
+      Alert.alert('物品名稱必填');
+      return;
+    }
+    if (!spaceId) {
+      Alert.alert('請先選擇空間', '在 session 模式下，先選定一個空間再開始整理。');
+      return;
+    }
+    const qty = Number.parseInt(quantity, 10);
+    const pending: PendingDetection = {
+      id: String(uuid.v4()),
+      name: name.trim(),
+      category,
+      quantity: Number.isFinite(qty) && qty > 0 ? qty : 1,
+      confidence: 1,
+      sourceType: 'manual',
+      photoUri,
+      note: note.trim() || undefined,
+    };
+    setPendings((p) => [pending, ...p]);
+    resetCurrentInputs();
+  }
+
+  function onRemovePending(id: string) {
+    setPendings((p) => p.filter((d) => d.id !== id));
+  }
+
+  /**
+   * 直接走舊版單一物品 quick-save（沒選空間時的 fallback）。
+   * 維持向後相容性 — 不破壞 M2/M3 流程。
+   */
+  async function onQuickSaveLegacy() {
     if (!name.trim()) {
       Alert.alert('物品名稱必填');
       return;
@@ -88,6 +152,70 @@ export function AddItemScreen({ navigation }: Props) {
     navigation.goBack();
   }
 
+  async function onGoReview() {
+    if (!canReview) {
+      Alert.alert('還不能 commit', '請至少加入一筆 detection 並選定空間。');
+      return;
+    }
+    setMode('review');
+  }
+
+  /**
+   * Commit：把 pending detections 寫成這個空間的新 snapshot。
+   * 同時寫一份 Item 維持 M2/M3 向後相容。
+   */
+  async function onCommit() {
+    if (!spaceId || pendings.length === 0) return;
+
+    // 先檢查異常
+    const latest = await loadLatestSnapshotForSpace(spaceId);
+    const anomalies = detectAnomalies(pendings, latest);
+    if (anomalies.length > 0) {
+      const detail = anomalies
+        .map(
+          (a) =>
+            `${CATEGORY_LABEL[a.category]}：上次 ${a.previousQuantity} → 本次 ${a.currentQuantity} (${a.ratio.toFixed(1)}x)`,
+        )
+        .join('\n');
+      const goAhead = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          '數量異常確認',
+          `偵測到某些類別數量大幅增加：\n\n${detail}\n\n確定要 commit 嗎？`,
+          [
+            { text: '取消', style: 'cancel', onPress: () => resolve(false) },
+            { text: '確定 commit', onPress: () => resolve(true) },
+          ],
+        );
+      });
+      if (!goAhead) return;
+    }
+
+    const session = await createSession(spaceId);
+    for (const p of pendings) {
+      await addDetectionToSession(session.id, p);
+    }
+    await commitSnapshot(session.id);
+
+    // 同時寫進 items storage 維持向後相容
+    for (const p of pendings) {
+      await addItem({
+        name: p.name,
+        category: p.category,
+        quantity: p.quantity,
+        photoUri: p.photoUri,
+        note: p.note,
+        spaceId,
+      });
+    }
+
+    navigation.goBack();
+  }
+
+  const selectedSpace = useMemo(
+    () => spaces.find((s) => s.id === spaceId),
+    [spaces, spaceId],
+  );
+
   if (cameraOpen) {
     return (
       <View style={styles.cameraWrap}>
@@ -97,6 +225,32 @@ export function AddItemScreen({ navigation }: Props) {
           <Button title="拍照" onPress={takePhoto} />
         </SafeAreaView>
       </View>
+    );
+  }
+
+  if (mode === 'review') {
+    return (
+      <SafeAreaView edges={['bottom']} style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.reviewTitle}>確認 Snapshot</Text>
+          <Text style={styles.reviewBody}>
+            這份 snapshot 會{selectedSpace ? `寫到「${selectedSpace.name}」` : ''}，取代該空間的當前狀態（不累加）。確認無誤後送出。
+          </Text>
+          {pendings.map((p) => (
+            <View key={p.id} style={styles.pendingCard}>
+              <Text style={styles.pendingName}>{p.name}</Text>
+              <Text style={styles.pendingMeta}>
+                {CATEGORY_LABEL[p.category]} · 數量 {p.quantity}
+              </Text>
+              {p.note ? <Text style={styles.pendingNote}>{p.note}</Text> : null}
+            </View>
+          ))}
+          <View style={styles.reviewActions}>
+            <Button title="返回編輯" variant="secondary" onPress={() => setMode('capture')} style={styles.rowBtn} />
+            <Button title="commit snapshot" onPress={onCommit} style={styles.rowBtn} />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -186,7 +340,37 @@ export function AddItemScreen({ navigation }: Props) {
           onChangeText={setNote}
         />
 
-        <Button title="儲存" onPress={onSave} style={{ marginTop: 16 }} />
+        {pendings.length > 0 && (
+          <View style={styles.pendingList}>
+            <Text style={styles.pendingHeader}>本次 session 已加入 {pendings.length} 筆</Text>
+            {pendings.map((p) => (
+              <Pressable
+                key={p.id}
+                onLongPress={() => onRemovePending(p.id)}
+                style={styles.pendingItem}
+              >
+                <Text style={styles.pendingItemText}>
+                  {p.name} · {CATEGORY_LABEL[p.category]} × {p.quantity}
+                </Text>
+                <Text style={styles.pendingItemHint}>長按移除</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        {spaceId ? (
+          <>
+            <Button title="加入這次 session" onPress={onAddToSession} style={{ marginTop: 16 }} />
+            <Button
+              title={`下一步：審核並 commit (${pendings.length})`}
+              variant="secondary"
+              onPress={onGoReview}
+              style={{ marginTop: 8 }}
+            />
+          </>
+        ) : (
+          <Button title="儲存" onPress={onQuickSaveLegacy} style={{ marginTop: 16 }} />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -245,4 +429,34 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
   },
+  pendingList: {
+    marginTop: 16,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+  },
+  pendingHeader: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 8 },
+  pendingItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  pendingItemText: { fontSize: 13, color: colors.text },
+  pendingItemHint: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  reviewTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 6 },
+  reviewBody: { fontSize: 13, color: colors.textMuted, marginBottom: 14, lineHeight: 19 },
+  pendingCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    marginBottom: 8,
+  },
+  pendingName: { fontSize: 14, fontWeight: '600', color: colors.text },
+  pendingMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  pendingNote: { fontSize: 12, color: colors.text, marginTop: 4 },
+  reviewActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
 });

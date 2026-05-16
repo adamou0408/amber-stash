@@ -13,6 +13,7 @@ import { Section } from '@/components/Section';
 import { colors } from '@/theme/colors';
 import { loadItems } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
+import { loadLatestSnapshotMap } from '@/storage/sessionStorage';
 import { loadPreferences, setActiveMethodology } from '@/storage/preferencesStorage';
 import { generateSuggestions } from '@/services/suggestions';
 import { ALL_METHODOLOGIES, getExpertFor, getMethodology } from '@/services/methodologies';
@@ -28,8 +29,9 @@ export function SuggestionsScreen() {
     const prefs = await loadPreferences();
     const methodology = getMethodology(prefs.activeMethodologyId) ?? DEFAULT_METHODOLOGY;
     const [items, spaces] = await Promise.all([loadItems(), loadSpaces()]);
+    const latestMap = await loadLatestSnapshotMap(spaces.map((s) => s.id));
     setActive(methodology);
-    setSuggestions(generateSuggestions(items, spaces, methodology.id));
+    setSuggestions(generateSuggestions(items, spaces, methodology.id, latestMap));
   }, []);
 
   useFocusEffect(
