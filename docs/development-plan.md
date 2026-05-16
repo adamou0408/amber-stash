@@ -102,9 +102,9 @@
 
 ### 🩺 M0.5 工程衛生（橫切，隨時可補）
 
-- [x] App Icon / Splash / Adaptive Icon PNG（SVG 源 + sharp script 產出，commit `M05_HASH`）
-- [x] GitHub Actions CI（push / PR 自動跑 tsc + test + web bundle + 上傳 web bundle artifact，commit `M05_HASH`）
-- [x] E2E 測試 baseline（Detox config + jest config + firstRun smoke test 已立，commit `M05_HASH`） · ⚠️ 真實 run 仍需 iOS / Android 模擬器
+- [x] App Icon / Splash / Adaptive Icon PNG（SVG 源 + sharp script 產出，commit `c17aa02`）
+- [x] GitHub Actions CI（push / PR 自動跑 tsc + test + web bundle + 上傳 web bundle artifact，commit `c17aa02`）
+- [x] E2E 測試 baseline（Detox config + jest config + firstRun smoke test 已立，commit `c17aa02`） · ⚠️ 真實 run 仍需 iOS / Android 模擬器
 - [ ] 真實 iOS / Android 模擬器跑 smoke test（環境只跑得了 web bundle，需要使用者本機跑 `npm run e2e:ios` / `npm run e2e:android`）
 - [ ] 效能 profiling（大量物品 > 500 筆下 FlatList 表現）
 - [ ] 把 `KONMARI_METHODOLOGY` 的 placeholder 換成真實授權內容（屬 M6）
