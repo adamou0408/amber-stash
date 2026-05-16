@@ -40,7 +40,7 @@
 | M4 | Session + Snapshot | 防重複計算的根本架構 | ✅ 架構 ship（commit `4cbd8aa`+`dfaf2fc`+`9984df7`） · ⚠️ UX 部分延後 |
 | M5 | Claude Vision | 拍照辨識 → detection proposal 進 session | ✅ 架構 ship（commit `0ed0f66`） · ⚠️ UX 部分延後 |
 | M6 | 方法論內容啟動 | 邀請 3-5 收納師、授權合約、訂閱金流 | 🔄 進行中 — 材料 ship（commit `07bda99`）/ 真實邀請待你動手 |
-| M7 | 客製收納箱 | 箱規格 / 訂單 / 雷雕字段 / SVG outline | ✅ 工程核心 ship（純資料 + 邏輯，無 UI；UI 下一輪） |
+| M7 | 客製收納箱 | 箱規格 / 訂單 / 雷雕字段 / SVG outline | ✅ 工程核心 ship（commit `ad3f0fe`，純資料 + 邏輯，無 UI；UI 下一輪） |
 | M8 | 雲端 + 上架 | Supabase / EAS / 商店 / Landing | ❌ 未啟動 |
 | **M0.5** | 工程衛生 | CI / 真機驗證 / 效能 profiling / App Icon | ❌ 未啟動（橫切，分散在各 milestone） |
 
@@ -52,7 +52,7 @@
 
 ## 現況 Snapshot
 
-> 隨每次 ship 更新；最後同步：2026-05-16（M7 工程核心 ship；commit hash 待 git commit 後補入）
+> 隨每次 ship 更新；最後同步：2026-05-16（M7 工程核心 ship，HEAD `ad3f0fe`）
 > 規則：完成項目要打 `[x]`、延後項目維持 `[ ]` 並標 `(deferred → M?)`
 
 ### ✅ 已 ship
@@ -73,7 +73,7 @@
 - [x] M5 AI service 單元測試（+13 tests，共 52 tests）
 - [x] M6 outreach 材料 5 份：候選名單 / 授權 outline / 邀請信 / 撰寫指南 / 分潤模式
 - [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
-- [x] M7 工程核心：`types/box.ts` / `services/box/catalog.ts`（13 SKU）/ `recommender.ts` / `svgOutline.ts`（opentype.js + Noto Sans TC 900）/ `boxOrderStorage.ts`（狀態機含合法/非法轉移驗證）+ 71 個新測試（共 123 tests）
+- [x] M7 工程核心（commit `ad3f0fe`）：`types/box.ts` / `services/box/catalog.ts`（13 SKU）/ `recommender.ts` / `svgOutline.ts`（opentype.js + Noto Sans TC 900）/ `boxOrderStorage.ts`（狀態機含合法/非法轉移驗證）+ 71 個新測試（共 123 tests）
 
 ### ⚠️ 架構做了但 UX/功能未完整
 
@@ -91,7 +91,7 @@
 
 - [ ] M6 真實邀請 3-5 位收納師（材料 ready，需要使用者親自談）
 - [ ] M6 律師 review 授權合約 outline 第 1.3 / 2.2 / 7.3 條
-- [x] M7 客製收納箱（工程核心）：`types/box.ts` / `services/box/{catalog,recommender,svgOutline}.ts` / `storage/boxOrderStorage.ts` / 71 個測試 — 純資料 + 邏輯層 ship（commit hash 見「Snapshot」對應條目）
+- [x] M7 客製收納箱（工程核心，commit `ad3f0fe`）：`types/box.ts` / `services/box/{catalog,recommender,svgOutline}.ts` / `storage/boxOrderStorage.ts` / 71 個測試 — 純資料 + 邏輯層 ship
 - [ ] M7 客製收納箱（UI 層）：訂購流程 screen / 雷雕字預覽 UI / SKU 選擇 UI (deferred → 下一輪)
 - [ ] M7 雷雕工廠合作關係（需使用者談）
 - [ ] M8 Supabase Auth + Postgres、Repository 介面換實作
