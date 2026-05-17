@@ -98,6 +98,18 @@
   - AddItem：進階屬性 collapsible（顏色 12 色 swatch / 七五一層級 / 擺放方式 picker）
   - ItemsScreen：新增 color pill（含 swatch）+ 七五一 pill
   - demo data：14 件物品全面補新欄位讓四派都能 demo
+- [x] **M5.5-T1.7 知識庫擴張 — 廖心筠（台灣本土）+ KC Davis（ADHD 寬容派）**
+  - 依台灣收納全景研究報告做第一性原理萃取（見 ADR-010）
+  - 新增 2 個 primitive：`Item.associationHint` (free text)、`Item.isHeirloom` (bool)
+  - RuleCondition 新增 2 類：`unassociatedCount` / `heirloomCount`
+  - 新增 lifecyclePhase：`gentle-reset`（給 ADHD / 心理負擔重者）
+  - 新增 2 套方法論：
+    - 廖心筠聯想收納 liaohsinyun-zh（maintenance）— 10 條規則，聯想動線 + 華人 8 大文化包袱（祖傳/集點/風水/多代/濕度/米蟲）
+    - 寬容派 gentle-zh（gentle-reset）— 9 條規則，5 樣物品法 + 15 分鐘原則 + 不責備 UI 措辭
+  - 跨派字眼修正（損失規避）：「未設頻率」→「待你定義頻率」；「丟掉」→「感謝後放手 / 轉送」
+  - 跨派規則文字加入：KonMari 拍照留念再放手（Chu & Shu 2023）、KonMari + 斷捨離 20/20 法則
+  - Onboarding：5 個 phase 卡片
+  - 新增永久知識庫 `docs/methodology-knowledge.md`（10 章節 + 增派 checklist）
 - [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
 
 ### ⚠️ 架構做了但 UX/功能未完整（M5.5 補完）
@@ -533,6 +545,20 @@ HTML/CSS 開發迭代快、列印 + PDF 一條路徑兩用途。雷雕級 SVG ou
 - 連動下架：M6 舊（內容變現）、M7 舊（客製箱銷售）、M8 訂閱金流 / 埋點 / Landing waitlist
 - 連動保留：M3 方法論引擎（讓建議真有用的核心）、M5 Claude Vision（壓低錄入摩擦的關鍵）
 - 可逆：若 M6 使用者煙霧測試驗證 PMF，v5 可重新評估啟用任一變現線（材料 / code 都保留）
+
+### ADR-010 · 多派內建 + lifecycle 切換、不採訂閱付費
+- 觸發：使用者要求支援三派 KonMari / 斷捨離 / Home Edit，後續又加入台灣收納全景報告（廖心筠 / KC Davis / 心理機制證據）
+- 決策：
+  - **6 派全部內建免費**（amberstash-default、斷捨離、KonMari、廖心筠、Home Edit、寬容派）
+  - 方法論加 `lifecyclePhase` 欄位，**單一活躍方法論 + lifecycle 切換**，不是同時啟用多派（聲音衝突）
+  - 第一次開 app 強制 onboarding 5 卡片選 phase，可跳過用 default
+  - 跨派引用學術 / 心理機制證據（損失規避 / 稟賦效應 / Chu & Shu 2023 / 20/20 法則）增強文字說服力
+- 拒絕的設計：
+  - 「同時啟用多派」— 聲音衝突無法解（KonMari 全部拿出來 vs 斷捨離每天一點）
+  - 「方法論訂閱付費」— 違反 ADR-009 v4 目標
+  - 「為每派加獨立資料欄位」— 違反第一性原理；萃取共用 primitive（6 Item + 1 Space 欄位 = 6 派全支援）
+- 知識永久保存：`docs/methodology-knowledge.md`（10 章節 + 增派 checklist）— 未來增派時的單一參考點
+- 可逆：lifecyclePhase 可隨時 toggle、方法論可隨時新增；訂閱金流 v5 可重新評估
 
 ---
 

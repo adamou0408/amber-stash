@@ -401,10 +401,15 @@ describe('methodologyEngine — 多派擴充（v4 五派共存）', () => {
     expect(out.find((s) => s.id.endsWith('::edit-before-aesthetic'))).toBeDefined();
   });
 
-  test('all 4 methodologies are registered with distinct lifecycle phases', () => {
-    expect(ALL_METHODOLOGIES.length).toBe(4);
-    const phases = ALL_METHODOLOGIES.map((m) => m.lifecyclePhase).sort();
-    expect(phases).toEqual(['aesthetic', 'deep-clean', 'maintenance', 'mindset']);
+  test('all 6 methodologies are registered, covering 5 distinct lifecycle phases', () => {
+    expect(ALL_METHODOLOGIES.length).toBe(6);
+    const phases = new Set(ALL_METHODOLOGIES.map((m) => m.lifecyclePhase));
+    expect(phases.size).toBe(5);
+    expect(phases.has('mindset')).toBe(true);
+    expect(phases.has('deep-clean')).toBe(true);
+    expect(phases.has('maintenance')).toBe(true);
+    expect(phases.has('aesthetic')).toBe(true);
+    expect(phases.has('gentle-reset')).toBe(true);
   });
 
   test('methodologyForPhase returns correct methodology', () => {
@@ -429,8 +434,96 @@ describe('methodologyEngine — 多派擴充（v4 五派共存）', () => {
     const sets = ALL_METHODOLOGIES.map((m) =>
       new Set(runMethodology(m, items, []).map((s) => s.id)),
     );
-    // At least 3 of 4 should be distinct
+    // At least 4 of 6 should be distinct
     const distinct = new Set(sets.map((s) => Array.from(s).sort().join('|')));
-    expect(distinct.size).toBeGreaterThanOrEqual(3);
+    expect(distinct.size).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('methodologyEngine — 廖心筠 + 寬容派擴張（v4 六派共存）', () => {
+  test('all 6 methodologies registered, 5 distinct lifecycle phases (maintenance has 2)', async () => {
+    // dynamic import to avoid hoisting issues
+    const mod = await import('@/services/methodologies');
+    expect(mod.ALL_METHODOLOGIES.length).toBe(6);
+    const phases = new Set(mod.ALL_METHODOLOGIES.map((m) => m.lifecyclePhase));
+    expect(phases.size).toBe(5);
+    expect(phases.has('gentle-reset')).toBe(true);
+    expect(mod.methodologiesForPhase('maintenance').length).toBe(2); // default + 廖心筠
+  });
+
+  test('unassociatedCount counts items without associationHint', () => {
+    const items = [
+      it_('a', 'tools', 3),
+      it_('b', 'tools', 2),
+    ];
+    items[0].associationHint = '口罩、悠遊卡';
+    const ctx = buildContext(items, []);
+    expect(ctx.unassociatedCount).toBe(2);
+    expect(evaluate({ type: 'unassociatedCount', op: '>=', value: 2 }, ctx)).toBe(true);
+    expect(evaluate({ type: 'unassociatedCount', op: '>=', value: 3 }, ctx)).toBe(false);
+  });
+
+  test('heirloomCount counts isHeirloom items by quantity', () => {
+    const items = [
+      it_('grandma-watch', 'sentimental', 1),
+      it_('great-vase', 'sentimental', 2),
+      it_('regular', 'sentimental', 5),
+    ];
+    items[0].isHeirloom = true;
+    items[1].isHeirloom = true;
+    const ctx = buildContext(items, []);
+    expect(ctx.heirloomCount).toBe(3);
+    expect(evaluate({ type: 'heirloomCount', op: '>=', value: 1 }, ctx)).toBe(true);
+    expect(evaluate({ type: 'heirloomCount', op: '<', value: 10 }, ctx)).toBe(true);
+  });
+
+  test('liaohsinyun methodology fires association-design for many unassociated items', async () => {
+    const mod = await import('@/services/methodologies/liaohsinyun');
+    const items = Array.from({ length: 6 }, (_, i) => it_(`x${i}`, 'tools', 1));
+    const out = runMethodology(mod.LIAOHSINYUN_METHODOLOGY, items, []);
+    expect(out.find((s) => s.id.endsWith('::association-design'))).toBeDefined();
+  });
+
+  test('liaohsinyun methodology fires heirloom-gentle when heirloom flag set', async () => {
+    const mod = await import('@/services/methodologies/liaohsinyun');
+    const item = it_('grandma-watch', 'sentimental', 1);
+    item.isHeirloom = true;
+    const out = runMethodology(mod.LIAOHSINYUN_METHODOLOGY, [item], []);
+    const rule = out.find((s) => s.id.endsWith('::heirloom-gentle'));
+    expect(rule).toBeDefined();
+    expect(rule?.title).toContain('家族傳承');
+    expect(rule?.body).toContain('祖傳');
+  });
+
+  test('gentle (KC Davis) methodology fires morally-neutral as top priority', async () => {
+    const mod = await import('@/services/methodologies/gentle');
+    const out = runMethodology(mod.GENTLE_METHODOLOGY, [it_('x', 'tools', 5)], []);
+    expect(out[0]?.id.endsWith('::morally-neutral')).toBe(true);
+  });
+
+  test('gentle methodology fires five-things when ≥5 items', async () => {
+    const mod = await import('@/services/methodologies/gentle');
+    const out = runMethodology(mod.GENTLE_METHODOLOGY, [it_('x', 'tools', 5)], []);
+    expect(out.find((s) => s.id.endsWith('::five-things'))).toBeDefined();
+  });
+
+  test('gentle methodology has no shaming language in any rule', async () => {
+    const mod = await import('@/services/methodologies/gentle');
+    const forbidden = ['應該', '必須', '錯誤'];
+    for (const r of mod.GENTLE_METHODOLOGY.rules) {
+      const text = r.suggestion.titleTemplate + r.suggestion.bodyTemplate;
+      for (const word of forbidden) {
+        expect(text).not.toContain(word);
+      }
+    }
+  });
+
+  test('photo-before-release rule fires for KonMari when sentimentals exist', async () => {
+    const mod = await import('@/services/methodologies/konmari');
+    const items = Array.from({ length: 5 }, (_, i) => it_(`s${i}`, 'sentimental', 1));
+    const out = runMethodology(mod.KONMARI_METHODOLOGY, items, []);
+    const rule = out.find((s) => s.id.endsWith('::photo-before-release'));
+    expect(rule).toBeDefined();
+    expect(rule?.body).toContain('Chu & Shu');
   });
 });

@@ -114,8 +114,19 @@ export const KONMARI_METHODOLOGY: Methodology = {
       suggestion: {
         titleTemplate: '❄️ {rarely} 件很少用的物品 — 練習感謝後放手',
         bodyTemplate:
-          '一件件拿起每件 rarely 物品問「會讓你怦然心動嗎？」不會的話：「謝謝你曾經陪我」然後放手。物品的角色完成了，不必愧疚。',
-        tags: ['konmari', 'principle-3'],
+          '一件件拿起每件 rarely 物品問「會讓你怦然心動嗎？」不會的話：「謝謝你曾經陪我」然後放手。不確定的可以套 20/20 法則：能用 NT$ 600 內、20 分鐘內購回嗎？是的話安心放手。物品的角色完成了，不必愧疚。',
+        tags: ['konmari', 'principle-3', '20-20-rule'],
+      },
+    },
+    {
+      id: 'photo-before-release',
+      appliesWhen: { type: 'categoryCount', category: 'sentimental', op: '>=', value: 5 },
+      priority: 65,
+      suggestion: {
+        titleTemplate: '📸 拍照留念再放手 · 紀念品 {sentimental} 件',
+        bodyTemplate:
+          '紀念品最難處理是因為「失去 = 失去回憶」的恐懼。研究（Chu & Shu 2023）證實：先拍照數位化保存，再實體放手，稟賦效應（捨不得）會大幅降低。Amber Stash 拍照入庫的物品都有照片留底，放手後仍可隨時翻看。',
+        tags: ['konmari', 'photo-memory', 'science'],
       },
     },
     {

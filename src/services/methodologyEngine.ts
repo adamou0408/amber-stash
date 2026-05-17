@@ -35,6 +35,8 @@ export function buildContext(items: Item[], spaces: Space[]): DecisionContext {
   };
   let unfrequentedCount = 0;
   let untieredCount = 0;
+  let unassociatedCount = 0;
+  let heirloomCount = 0;
   let totalQty = 0;
   const itemCountBySpace: Record<string, number> = {};
 
@@ -61,6 +63,12 @@ export function buildContext(items: Item[], spaces: Space[]): DecisionContext {
       tierCounts[it.visibilityTier] += it.quantity;
     } else {
       untieredCount += it.quantity;
+    }
+    if (!it.associationHint) {
+      unassociatedCount += it.quantity;
+    }
+    if (it.isHeirloom) {
+      heirloomCount += it.quantity;
     }
   }
 
@@ -119,6 +127,8 @@ export function buildContext(items: Item[], spaces: Space[]): DecisionContext {
     tierRatios,
     tierCounts,
     untieredCount,
+    unassociatedCount,
+    heirloomCount,
   };
 }
 
@@ -171,6 +181,10 @@ export function evaluate(cond: RuleCondition, ctx: DecisionContext): boolean {
     }
     case 'untieredCount':
       return compare(ctx.untieredCount, cond.op, cond.value);
+    case 'unassociatedCount':
+      return compare(ctx.unassociatedCount, cond.op, cond.value);
+    case 'heirloomCount':
+      return compare(ctx.heirloomCount, cond.op, cond.value);
   }
 }
 
@@ -201,6 +215,8 @@ function fillTemplate(tmpl: string, ctx: DecisionContext): string {
     if (key === 'storedRatio') return `${Math.round(ctx.tierRatios.stored * 100)}%`;
     if (key === 'shrineRatio') return `${Math.round(ctx.tierRatios.shrine * 100)}%`;
     if (key === 'untiered') return String(ctx.untieredCount);
+    if (key === 'unassociated') return String(ctx.unassociatedCount);
+    if (key === 'heirloom') return String(ctx.heirloomCount);
     return String(ctx.categoryCounts[key] ?? 0);
   });
 }

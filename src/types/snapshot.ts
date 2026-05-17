@@ -50,6 +50,10 @@ export type Detection = {
   visibilityTier?: VisibilityTier;
   /** KonMari 直立折疊等擺放方式 */
   placement?: PlacementHint;
+  /** 廖心筠聯想收納：跟誰一起放 */
+  associationHint?: string;
+  /** 家族傳承物 / 紀念性遺物（華人文化特殊處理） */
+  isHeirloom?: boolean;
 };
 
 /**

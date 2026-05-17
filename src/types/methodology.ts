@@ -76,7 +76,15 @@ export type RuleCondition =
   /**
    * 斷捨離七五一法則：某層級尚未設定的物品件數
    */
-  | { type: 'untieredCount'; op: '>=' | '>'; value: number };
+  | { type: 'untieredCount'; op: '>=' | '>'; value: number }
+  /**
+   * 廖心筠聯想收納：尚未設定 associationHint 的物品件數
+   */
+  | { type: 'unassociatedCount'; op: '>=' | '>'; value: number }
+  /**
+   * 華人文化處理：家族傳承物 / 紀念性遺物的件數
+   */
+  | { type: 'heirloomCount'; op: '>=' | '>' | '<' | '<='; value: number };
 
 export type RuleSuggestion = {
   titleTemplate: string;
@@ -108,21 +116,22 @@ export type MethodologyPricing =
 
 /**
  * 方法論的「生命週期階段」 — 使用者整理流程的哪一段最適用本方法。
- *  - mindset:     建立心法、消費哲學（斷捨離）
- *  - deep-clean:  一次性大整理（KonMari）
- *  - maintenance: 日常維持（amberstash-default）
- *  - aesthetic:   視覺呈現 / 美觀升級（Home Edit）
+ *  - mindset:       建立心法、消費哲學（斷捨離）
+ *  - deep-clean:    一次性大整理（KonMari）
+ *  - maintenance:   日常維持（amberstash-default / 廖心筠聯想收納）
+ *  - aesthetic:     視覺呈現 / 美觀升級（Home Edit）
+ *  - gentle-reset:  ADHD / 心理負擔重的人 — 寬容門檻（KC Davis）
  *
- * 使用者可依當前階段切換不同方法論，建議流程：
- *   mindset → deep-clean → maintenance → aesthetic（依個人 lifestyle）
+ * 使用者可依當前階段切換不同方法論，沒有固定順序。
  */
-export type LifecyclePhase = 'mindset' | 'deep-clean' | 'maintenance' | 'aesthetic';
+export type LifecyclePhase = 'mindset' | 'deep-clean' | 'maintenance' | 'aesthetic' | 'gentle-reset';
 
 export const LIFECYCLE_LABEL: Record<LifecyclePhase, string> = {
   mindset: '心法',
   'deep-clean': '大整理',
   maintenance: '日常維持',
   aesthetic: '視覺呈現',
+  'gentle-reset': '寬容重置',
 };
 
 export const LIFECYCLE_EMOJI: Record<LifecyclePhase, string> = {
@@ -130,13 +139,15 @@ export const LIFECYCLE_EMOJI: Record<LifecyclePhase, string> = {
   'deep-clean': '🌀',
   maintenance: '🔁',
   aesthetic: '🌈',
+  'gentle-reset': '🌿',
 };
 
 export const LIFECYCLE_DESC: Record<LifecyclePhase, string> = {
   mindset: '改變與物品的關係。先想清楚要什麼樣的生活，再決定留什麼。',
   'deep-clean': '一次性把所有東西過一遍 —「全部拿出來、按類別、心動才留」。',
-  maintenance: '每天 5 分鐘維持。常用的放黃金區、80% 滿就減量、一進一出。',
+  maintenance: '每天小整理就維持。常用的放黃金區、80% 滿就減量、一進一出。',
   aesthetic: '完成基礎收納後追求視覺美感 — 彩虹分類、透明盒、看得見的秩序。',
+  'gentle-reset': '不追求完美。整理過很多次都維持不住、有 ADHD 或心理負擔重時用這派 — 5 樣物品法、15 分鐘原則、「家為你服務，你不為家服務」。',
 };
 
 export type Methodology = {
@@ -192,4 +203,8 @@ export type DecisionContext = {
   tierCounts: Record<'show' | 'stored' | 'shrine', number>;
   /** 尚未設定 visibility tier 的物品件數 */
   untieredCount: number;
+  /** 尚未設定 associationHint 的物品件數 */
+  unassociatedCount: number;
+  /** 家族傳承物 / 紀念性遺物的件數 */
+  heirloomCount: number;
 };

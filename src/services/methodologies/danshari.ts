@@ -95,8 +95,8 @@ export const DANSHARI_METHODOLOGY: Methodology = {
       suggestion: {
         titleTemplate: '❄️ {rarely} 件很少用 — 是執著還是需要？',
         bodyTemplate:
-          '「離」的修練 — 脫離對物品的執著。每件 rarely 物品問自己：「不留會不舒服嗎？」若你心裡卡卡的，那是「執著」不是「需要」。練習感謝它陪伴過，然後放手。',
-        tags: ['danshari', 'attachment'],
+          '「離」的修練 — 脫離對物品的執著。每件 rarely 物品問自己：「不留會不舒服嗎？」若你心裡卡卡的，那是「執著」不是「需要」。客觀檢驗：用 NT$ 600 內、20 分鐘內能購回嗎？能的話，「以防萬一」就只是執著的偽裝。',
+        tags: ['danshari', 'attachment', '20-20-rule'],
       },
     },
     {

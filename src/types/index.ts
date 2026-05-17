@@ -186,6 +186,17 @@ export type Item = {
   visibilityTier?: VisibilityTier;
   /** KonMari 直立折疊、Home Edit 站立展示 */
   placement?: PlacementHint;
+  /**
+   * 廖心筠聯想性收納法：本物品收納時，要「跟誰一起」放？
+   * 例：鑰匙 → "口罩、悠遊卡"（出門連動），保養品 → "化妝棉、卸妝水"（使用順序）。
+   * 自由文字，不限格式。空值代表使用者尚未做聯想設計。
+   */
+  associationHint?: string;
+  /**
+   * 是否為「家族傳承物 / 紀念性遺物」— 華人收納文化特殊欄位。
+   * 觸發更溫和的處置建議，避免使用「丟」「淘汰」字眼。
+   */
+  isHeirloom?: boolean;
   createdAt: number;
   updatedAt: number;
 };

@@ -31,6 +31,10 @@ const PHASES: { phase: LifecyclePhase; question: string }[] = [
     phase: 'aesthetic',
     question: '基礎收納 OK 了，想再升級視覺美感',
   },
+  {
+    phase: 'gentle-reset',
+    question: '整理過很多次但維持不住 / 容易自責',
+  },
 ];
 
 export function OnboardingScreen({ onDone }: Props) {
