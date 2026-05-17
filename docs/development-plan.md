@@ -110,6 +110,14 @@
   - 跨派規則文字加入：KonMari 拍照留念再放手（Chu & Shu 2023）、KonMari + 斷捨離 20/20 法則
   - Onboarding：5 個 phase 卡片
   - 新增永久知識庫 `docs/methodology-knowledge.md`（10 章節 + 增派 checklist）
+- [x] **M5.5-T2.3 點擊熱點優化（v4，117 tests）**
+  - 連續錄入模式：quick-save 不再 goBack，留在頁面 + ✅ 已加入 N 件 banner + 「完成 →」按鈕；按鈕標籤動態變成「儲存並再加一個」
+  - 預設值記憶：preferencesStorage 加 lastCategory / lastSpaceId / lastUseFrequency；mount 時自動套用；任何 save 後更新
+  - AI 辨識無空間限制：移除 onRecognize 內 spaceId gate，識別結果先進 pendings；commit 入口仍守門
+  - 修 hooks order bug：emptyHintDismissed / savedCount 移到 component 頂部
+  - 加 hint「選個空間後可以 commit」inline 在 pendings 區
+  - +6 tests（preferencesStorage 完整覆蓋）
+  - 點擊路徑改善：連續加 5 件 15 → 7 clicks (-53%)
 - [x] **M5.5-T2.2 onboarding 點擊極簡化（v4，111 tests）**
   - 從「7 click 必走 quiz 5 題」改為「2 click 完成」預設路徑
   - 新流程：Step 1 Welcome（5 phase cards · 使用者語言）→ Step 2 Confirm（一鍵接受推薦派）→ done

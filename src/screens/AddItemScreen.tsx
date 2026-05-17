@@ -37,6 +37,7 @@ import {
 import type { Detection } from '@/types/snapshot';
 import { addItem, loadItems } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
+import { loadPreferences, rememberLastUsed } from '@/storage/preferencesStorage';
 import {
   addDetectionToSession,
   commitSnapshot,
@@ -79,6 +80,10 @@ export function AddItemScreen({ navigation }: Props) {
   const [placement, setPlacement] = useState<PlacementHint | undefined>();
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
+  // ---------- 連續錄入 / 體驗狀態 ----------
+  const [savedCount, setSavedCount] = useState(0);
+  const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
+
   // ---------- session state ----------
   const [mode, setMode] = useState<Mode>('capture');
   const [pendings, setPendings] = useState<PendingDetection[]>([]);
@@ -94,7 +99,22 @@ export function AddItemScreen({ navigation }: Props) {
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
 
   useEffect(() => {
-    loadSpaces().then(setSpaces);
+    let alive = true;
+    (async () => {
+      const [sps, prefs] = await Promise.all([loadSpaces(), loadPreferences()]);
+      if (!alive) return;
+      setSpaces(sps);
+      // 套用上次用過的預設值（黏性欄位）
+      if (prefs.lastCategory) setCategory(prefs.lastCategory);
+      if (prefs.lastUseFrequency) setUseFrequency(prefs.lastUseFrequency);
+      // 只有當 lastSpaceId 真的存在於目前 spaces 才套用（避免綁定已刪除空間）
+      if (prefs.lastSpaceId && sps.some((s) => s.id === prefs.lastSpaceId)) {
+        setSpaceId(prefs.lastSpaceId);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const canReview = pendings.length > 0 && !!spaceId;
@@ -139,10 +159,7 @@ export function AddItemScreen({ navigation }: Props) {
       Alert.alert('沒有照片', '請先拍照或選照片。');
       return;
     }
-    if (!spaceId) {
-      Alert.alert('請先選空間', 'AI 辨識結果會進到 session，要先指定空間。');
-      return;
-    }
+    // 不再強制要先選空間 — 識別結果先進 pendings，commit 時再守門
     setAiBusy(true);
     setAiHint(undefined);
     try {
@@ -172,17 +189,21 @@ export function AddItemScreen({ navigation }: Props) {
     }
   }
 
-  function resetCurrentInputs() {
+  /**
+   * 重置「transient」欄位（每件物品都不一樣）— 連續錄入時呼叫。
+   * sticky 欄位（category / spaceId / useFrequency）刻意不重置 — 通常一批物品同類別。
+   */
+  function resetTransientInputs() {
     setName('');
     setQuantity('1');
     setNote('');
     setPhotoUri(undefined);
     setPhotoBase64(undefined);
-    setUseFrequency(undefined);
     setInGoldenZone(false);
     setColor(undefined);
     setVisibilityTier(undefined);
     setPlacement(undefined);
+    setAiHint(undefined);
   }
 
   /**
@@ -215,7 +236,7 @@ export function AddItemScreen({ navigation }: Props) {
       placement,
     };
     setPendings((p) => [pending, ...p]);
-    resetCurrentInputs();
+    resetTransientInputs();
   }
 
   function onRemovePending(id: string) {
@@ -225,6 +246,11 @@ export function AddItemScreen({ navigation }: Props) {
   /**
    * 直接走舊版單一物品 quick-save（沒選空間時的 fallback）。
    * 維持向後相容性 — 不破壞 M2/M3 流程。
+   */
+  /**
+   * Quick-save：直接寫進 itemsStorage。
+   * 改 v4 行為：save 後不返回，保留 sticky 欄位，重置 transient — 支援連續錄入。
+   * 使用者點「完成 →」才返回 list。
    */
   async function onQuickSaveLegacy() {
     if (!name.trim()) {
@@ -245,6 +271,13 @@ export function AddItemScreen({ navigation }: Props) {
       visibilityTier,
       placement,
     });
+    // 記住這次用了什麼 — 下次開 AddItem 套用
+    await rememberLastUsed({ category, spaceId, useFrequency });
+    setSavedCount((c) => c + 1);
+    resetTransientInputs();
+  }
+
+  function onFinishAndBack() {
     navigation.goBack();
   }
 
@@ -329,6 +362,15 @@ export function AddItemScreen({ navigation }: Props) {
       });
     }
 
+    // 記住本次 session 用的空間 + 主要 category — 下次預設值
+    const primaryCategory = pendings[0]?.category;
+    const primaryFreq = pendings[0]?.useFrequency;
+    await rememberLastUsed({
+      spaceId,
+      category: primaryCategory,
+      useFrequency: primaryFreq,
+    });
+
     navigation.goBack();
   }
 
@@ -390,8 +432,9 @@ export function AddItemScreen({ navigation }: Props) {
   }
 
   // 收納師原則 2：「全部拿出來才看得見真相」 — session 開始時提醒先清空
-  const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
   const showEmptyFirstHint = spaceId && pendings.length === 0 && !emptyHintDismissed;
+  // 連續錄入計數器顯示條件
+  const showSavedBanner = savedCount > 0 && !spaceId; // 只在 quick-save 路徑顯示
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
@@ -406,6 +449,14 @@ export function AddItemScreen({ navigation }: Props) {
             </View>
             <Text style={styles.tipDismiss}>✕</Text>
           </Pressable>
+        )}
+        {showSavedBanner && (
+          <View style={styles.savedBanner}>
+            <Text style={styles.savedBannerText}>✅ 已加入 {savedCount} 件</Text>
+            <Pressable onPress={onFinishAndBack} hitSlop={8}>
+              <Text style={styles.savedBannerLink}>完成 →</Text>
+            </Pressable>
+          </View>
         )}
         <View style={styles.photoBox}>
           {photoUri ? (
@@ -624,7 +675,10 @@ export function AddItemScreen({ navigation }: Props) {
 
         {pendings.length > 0 && (
           <View style={styles.pendingList}>
-            <Text style={styles.pendingHeader}>本次 session 已加入 {pendings.length} 筆</Text>
+            <Text style={styles.pendingHeader}>
+              本次 session 已加入 {pendings.length} 筆
+              {!spaceId && '　（選個空間後可以 commit）'}
+            </Text>
             {pendings.map((p) => (
               <Pressable
                 key={p.id}
@@ -651,7 +705,21 @@ export function AddItemScreen({ navigation }: Props) {
             />
           </>
         ) : (
-          <Button title="儲存" onPress={onQuickSaveLegacy} style={{ marginTop: 16 }} />
+          <>
+            <Button
+              title={savedCount > 0 ? '儲存並再加一個' : '儲存'}
+              onPress={onQuickSaveLegacy}
+              style={{ marginTop: 16 }}
+            />
+            {savedCount > 0 && (
+              <Button
+                title={`完成 — 返回（已加 ${savedCount} 件）`}
+                variant="secondary"
+                onPress={onFinishAndBack}
+                style={{ marginTop: 8 }}
+              />
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -767,6 +835,20 @@ const styles = StyleSheet.create({
   tipBannerTitle: { fontSize: 12, fontWeight: '700', color: colors.text },
   tipBannerBody: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
   tipDismiss: { fontSize: 16, color: colors.textMuted, paddingHorizontal: 6 },
+  savedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#dff5ec',
+    borderRadius: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  savedBannerText: { fontSize: 13, fontWeight: '700', color: '#1f6047' },
+  savedBannerLink: { fontSize: 13, fontWeight: '700', color: colors.accent },
   zoneToggle: {
     marginTop: 10,
     borderRadius: 10,
