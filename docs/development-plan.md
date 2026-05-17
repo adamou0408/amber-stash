@@ -30,6 +30,69 @@
 
 ---
 
+## 核心功能優先順序
+
+> 「app 內有什麼 tab」≠「核心 user 功能」。
+> 北極星：**朋友拿你手機，3 分鐘感受 magic moment 不卡關**。
+> Magic moment：拍 10 張照片 → 3 分鐘後得到你家的收納方案 + 該買的 3 個收納盒。
+>
+> 任何工程決策，先問「這項對 hero 路徑有沒有貢獻」。
+
+### 🌟 三個 Hero 核心功能（缺一個 magic moment 就垮）
+
+| 順序 | 功能 | 對應實作 | user 感受到什麼 |
+|---|---|---|---|
+| 1 | **拍照即建檔** | AddItem → CameraStep → AI recognize → ReviewSheet → commit Snapshot | 「我拍了，它知道我有什麼」 |
+| 2 | **AI 收納顧問** | SuggestionsScreen + methodologyEngine + Methodology JSON | 「它告訴我怎麼放」 |
+| 3 | **客製收納箱推薦** | `services/box/recommender` + `services/box/svgOutline` + LabelsScreen | 「它告訴我該買哪個盒、可印貼紙、可雷雕」 |
+
+### 🛠️ 支援核心的次要功能（沒它 hero 跑不動，但本身不是 hero）
+
+| 功能 | 為什麼必要 |
+|---|---|
+| **空間管理**（Spaces tab） | Snapshot 必須掛在某個空間下 — 沒空間就沒辦法防重複計算 |
+| **方法論市場**（Onboarding step 2 + Settings 切換 + Suggestions chip） | hero 2 的「腦袋」可換 — 是付費鉤子 + 內容護城河 |
+| **購物清單**（Shopping tab） | 把「該買什麼」變成可勾選 / 之後可下單 |
+| **標籤列印**（Labels tab） | 把數位 inventory 變成實體 QR — 是 hero 3 的延伸（同一份 SVG 既印貼紙也給雷雕） |
+| **Settings**（6th tab） | 換 backend / 換方法論 / 清資料 / 重置 onboarding — infrastructure |
+
+### 🪤 容易被誤認為核心、其實是 byproduct 的
+
+| 功能 | 為什麼不是 hero |
+|---|---|
+| **Items list**（物品 tab） | inventory app 的 trap — Sortly 的死位置。我們的 inventory 是讓 AI 變聰明的燃料，不是 hero。應該「能看到、但不主動秀」 |
+| **Onboarding** | 一次性流程，產品價值不在這 |
+| **CRUD（增刪改）** | infrastructure，不是 user 來 app 的理由 |
+
+### 🔁 飛輪 mapping（為什麼正好是這三個 hero）
+
+```
+拍照即建檔    AI 收納顧問     收納箱推薦
+  ↓             ↓              ↓
+資料蒐集     資料變洞察      洞察變商品
+  ↓             ↓              ↓
+「我懂你」    「我幫你」      「我賣給你」
+  ↓             ↓              ↓
+免費入口     訂閱變現        箱子直營
+```
+
+### 給設計師 / 工程師的具體 spec
+
+依此原則調整當前 UX（**未做，列為下一個 sprint 的 polish 任務**）：
+
+- [ ] **預設落地 tab 應該是「建議」而非「物品」** — 對 returning user 來說，「我家應該怎麼收」比「我家有什麼」更有 retention pull
+- [ ] **「物品」tab 標籤可考慮改名為「資料」或「庫存」** — 降低它的視覺重要性，凸顯它是 byproduct
+- [ ] **「建議」tab 頂部第一張卡應該是 CTA**（「拍照繼續建檔」或「看推薦收納箱」），不只是純文字建議 list
+- [ ] **AddItem 完成 commit 後**，跳回首頁應該是「建議」tab 而非「物品」tab — 把使用者帶到 magic moment 的 value-step
+
+### Punch line
+
+> **把「AI 收納顧問」當主角，inventory 只是燃料，箱子是出貨。**
+>
+> 三件事都做、缺一不可；少了 hero 1 沒燃料，少了 hero 2 就是 Sortly，少了 hero 3 沒商業模式。
+
+---
+
 ## 里程碑總覽
 
 | # | 名稱 | 主要交付 | 狀態 |
@@ -137,6 +200,7 @@
 
 ### Step 1 · 看現況
 - 讀本文件的「現況 Snapshot」section — 那就是真實狀態
+- 讀本文件的「**核心功能優先順序**」section — 知道哪些是 hero、哪些是 support、哪些是 byproduct。**任何工程決策都要對得起 hero 路徑**
 - `git log --oneline d321548..HEAD` 看新增 commit
 
 ### Step 2 · 看資料模型
