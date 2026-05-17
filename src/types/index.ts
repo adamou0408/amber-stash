@@ -66,6 +66,105 @@ export const FREQUENCY_EMOJI: Record<UseFrequency, string> = {
   rarely: '❄️',
 };
 
+/**
+ * 顏色 — Home Edit 彩虹分類 + KonMari 同色系收納的底層欄位。
+ * 採 ROYGBIV + 中性色，足以覆蓋日常物件視覺分類。
+ */
+export type ItemColor =
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'blue'
+  | 'purple'
+  | 'pink'
+  | 'black'
+  | 'white'
+  | 'brown'
+  | 'gray'
+  | 'multi';
+
+export const COLOR_LABEL: Record<ItemColor, string> = {
+  red: '紅',
+  orange: '橘',
+  yellow: '黃',
+  green: '綠',
+  blue: '藍',
+  purple: '紫',
+  pink: '粉',
+  black: '黑',
+  white: '白',
+  brown: '棕',
+  gray: '灰',
+  multi: '混色',
+};
+
+export const COLOR_HEX: Record<ItemColor, string> = {
+  red: '#e74c3c',
+  orange: '#e67e22',
+  yellow: '#f1c40f',
+  green: '#27ae60',
+  blue: '#3498db',
+  purple: '#9b59b6',
+  pink: '#fd79a8',
+  black: '#2c3e50',
+  white: '#ecf0f1',
+  brown: '#a0522d',
+  gray: '#95a5a6',
+  multi: 'linear', // 給 UI 用
+};
+
+/** ROYGBIV 排序順序（Home Edit 彩虹分類用）— 中性色排在彩虹之後 */
+export const COLOR_ORDER: Record<ItemColor, number> = {
+  red: 0, orange: 1, yellow: 2, green: 3, blue: 4, purple: 5, pink: 6,
+  white: 7, gray: 8, brown: 9, black: 10, multi: 11,
+};
+
+/**
+ * 可見性分層 — 山下英子《斷捨離》的「七五一法則」底層欄位。
+ *  - show:    展示出來、看得見的（目標：滿格 70%）
+ *  - stored:  收起來、有門遮起來的（目標：滿格 50%）
+ *  - shrine:  紀念區、珍藏（目標：1% — 只能極少數）
+ */
+export type VisibilityTier = 'show' | 'stored' | 'shrine';
+
+export const TIER_LABEL: Record<VisibilityTier, string> = {
+  show: '看得見',
+  stored: '收起來',
+  shrine: '紀念區',
+};
+
+export const TIER_EMOJI: Record<VisibilityTier, string> = {
+  show: '👁️',
+  stored: '📦',
+  shrine: '🏛️',
+};
+
+/** 七五一法則目標比例 */
+export const TIER_TARGET_RATIO: Record<VisibilityTier, number> = {
+  show: 0.7,
+  stored: 0.5,
+  shrine: 0.01,
+};
+
+/**
+ * 收納擺放方式 — KonMari 直立折疊 / 工具站立法的底層欄位。
+ *  - vertical:  直立摺疊（衣物像書本立起）
+ *  - flat:      平放疊放
+ *  - hanging:   吊掛
+ *  - standing:  站立（工具、瓶罐）
+ *  - rolled:    捲起（運動服、毛巾）
+ */
+export type PlacementHint = 'vertical' | 'flat' | 'hanging' | 'standing' | 'rolled';
+
+export const PLACEMENT_LABEL: Record<PlacementHint, string> = {
+  vertical: '直立摺疊',
+  flat: '平放疊放',
+  hanging: '吊掛',
+  standing: '站立',
+  rolled: '捲起',
+};
+
 export type Item = {
   id: string;
   name: string;
@@ -81,6 +180,12 @@ export type Item = {
    * 與 useFrequency 配合判斷取物效率：daily + !inGoldenZone = 警示。
    */
   inGoldenZone?: boolean;
+  /** Home Edit 彩虹分類 / KonMari 同色系收納 */
+  color?: ItemColor;
+  /** 斷捨離七五一法則：show / stored / shrine */
+  visibilityTier?: VisibilityTier;
+  /** KonMari 直立折疊、Home Edit 站立展示 */
+  placement?: PlacementHint;
   createdAt: number;
   updatedAt: number;
 };

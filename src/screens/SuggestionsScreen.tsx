@@ -19,7 +19,12 @@ import { generateSuggestions } from '@/services/suggestions';
 import { ALL_METHODOLOGIES, getExpertFor, getMethodology } from '@/services/methodologies';
 import { DEFAULT_METHODOLOGY } from '@/services/methodologies/default';
 import type { Suggestion } from '@/types';
-import type { Methodology, MethodologyPricing } from '@/types/methodology';
+import {
+  LIFECYCLE_EMOJI,
+  LIFECYCLE_LABEL,
+  type Methodology,
+  type MethodologyPricing,
+} from '@/types/methodology';
 
 export function SuggestionsScreen() {
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
@@ -85,17 +90,24 @@ export function SuggestionsScreen() {
                     onPress={() => onSwitch(m.id)}
                   >
                     <Text style={[styles.methodChipText, on && styles.methodChipTextOn]}>
-                      {m.name}
+                      {LIFECYCLE_EMOJI[m.lifecyclePhase]} {m.name}
                     </Text>
                     <Text style={[styles.methodChipPrice, on && styles.methodChipPriceOn]}>
-                      {formatPricing(m.pricing)}
+                      {LIFECYCLE_LABEL[m.lifecyclePhase]} 階段
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
             <View style={styles.attribution}>
-              <Text style={styles.attributionTitle}>{active.name}</Text>
+              <View style={styles.attributionHeader}>
+                <Text style={styles.attributionTitle}>{active.name}</Text>
+                <View style={styles.phaseBadge}>
+                  <Text style={styles.phaseBadgeText}>
+                    {LIFECYCLE_EMOJI[active.lifecyclePhase]} {LIFECYCLE_LABEL[active.lifecyclePhase]}
+                  </Text>
+                </View>
+              </View>
               <Text style={styles.attributionAuthor}>by {expert?.displayName ?? '未知'}</Text>
               <Text style={styles.attributionDesc}>{active.description}</Text>
             </View>
@@ -118,6 +130,8 @@ export function SuggestionsScreen() {
   );
 }
 
+// kept for backward compat; not currently rendered in v4 (lifecycle phase shown instead)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function formatPricing(p: MethodologyPricing): string {
   switch (p.kind) {
     case 'free':
@@ -136,9 +150,10 @@ const styles = StyleSheet.create({
   header: { marginBottom: 12 },
   headerTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 4 },
   headerBody: { fontSize: 13, color: colors.textMuted },
-  methodPicker: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  methodPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   methodChip: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '45%',
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 14,
@@ -159,7 +174,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: 14,
   },
+  attributionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   attributionTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
+  phaseBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  phaseBadgeText: { fontSize: 10, color: colors.text, fontWeight: '600' },
   attributionAuthor: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   attributionDesc: { fontSize: 12, color: colors.text, marginTop: 6, lineHeight: 18 },
   body: { fontSize: 14, color: colors.text, lineHeight: 20 },

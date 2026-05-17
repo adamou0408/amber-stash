@@ -83,6 +83,21 @@
   - SpacesScreen：容量欄位 + quick presets + 行內填充率顯示（80% 警示變色）
   - ItemsScreen：頻率 pill + 黃金區 pill + 點一下快速設定頻率
   - 對應原則：1（部分）/ 2 UX / 5 / 6 / 8（教育性）/ 7 已 ship
+- [x] **M5.5-T1.5 三派全面實作 + lifecycle 切換**（v4，80 tests）
+  - 新增 3 個共用 primitive：`Item.color` (12 色 ROYGBIV+中性)、`Item.visibilityTier` (show/stored/shrine)、`Item.placement` (vertical/flat/hanging/standing/rolled)
+  - RuleCondition 新增 4 類：`colorDiversity` / `colorCount` / `tierExceeds` / `untieredCount`
+  - DecisionContext 新增：`colorCounts` / `categoryColorDiversity` / `dominantColor` / `tierRatios` / `tierCounts` / `untieredCount`
+  - Methodology 新增 `lifecyclePhase` 欄位（mindset / deep-clean / maintenance / aesthetic）
+  - 4 套方法論完整 ship：
+    - amberstash-default（maintenance）— 既有 + 5 條 T1 新規則
+    - 怦然心動式 konmari-zh（deep-clean）— 重寫為 10 條規則，五類別順序 + 直立摺 + 同色系
+    - 斷捨離 danshari-zh（mindset，新）— 9 條規則，七五一法則 + 三題核心提問 + 消費前暫停
+    - The Home Edit home-edit-zh（aesthetic，新）— 9 條規則，彩虹分類 + 透明盒 + 標籤
+  - Onboarding：第一次開 app 顯示 4 個 lifecycle 卡片，選了自動套對應方法論
+  - SuggestionsScreen：chip 顯示 lifecycle emoji + 階段，attribution 卡顯示階段 badge
+  - AddItem：進階屬性 collapsible（顏色 12 色 swatch / 七五一層級 / 擺放方式 picker）
+  - ItemsScreen：新增 color pill（含 swatch）+ 七五一 pill
+  - demo data：14 件物品全面補新欄位讓四派都能 demo
 - [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
 
 ### ⚠️ 架構做了但 UX/功能未完整（M5.5 補完）
@@ -356,6 +371,32 @@
 - **`Space.capacityEstimate`**（粗估件數）→ 解鎖 5 / 6
 
 這兩個欄位是「第一性思考」的結論 — 不要為每條原則做獨立資料模型，找出共用 primitive，一處變更全面解鎖。
+
+---
+
+## 四派全面支援（M5.5-T1.5 已 ship）
+
+四派同時內建，靠 `Methodology.lifecyclePhase` 對應整理流程的四階段。使用者依當前階段切換，不是同時開啟 — 因為流派的「聲音」需要一致（KonMari「全部拿出來」vs 斷捨離「每天一點」會打架）。
+
+| 派別 | id | lifecyclePhase | 何時用 |
+|---|---|---|---|
+| Amber Stash 通用 | `amberstash-default` | maintenance | 日常維持 |
+| 斷捨離（山下英子）| `danshari-zh` | mindset | 想改變消費 / 對物品的想法 |
+| 怦然心動式（近藤）| `konmari-zh` | deep-clean | 想一次徹底整理 |
+| The Home Edit | `home-edit-zh` | aesthetic | 已減量完，想視覺升級 |
+
+### 三派落地對應的共用 primitive
+
+| primitive | 解鎖的派 / 規則 |
+|---|---|
+| `Item.color` (12 色) | Home Edit 彩虹分類、KonMari 同色系收納 |
+| `Item.visibilityTier` (show/stored/shrine) | 斷捨離七五一法則（7 成看見 / 5 成收 / 1 成念）|
+| `Item.placement` (vertical/flat/hanging/standing/rolled) | KonMari 直立摺、工具站立法 |
+
+加上既有 `useFrequency` + `inGoldenZone` + `capacityEstimate`，**5 個 Item 欄位 + 1 個 Space 欄位** 完整支撐四派所有可規則化動作。
+
+### Onboarding 流程
+第一次開 app 顯示 4 個 lifecycle 卡片 → 使用者點一個 → 自動套對應方法論 + `onboarded: true`。可跳過 = 用 default。之後在「建議」tab 隨時切換。
 
 ---
 

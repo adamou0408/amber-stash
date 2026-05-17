@@ -1,4 +1,4 @@
-import type { ItemCategory, UseFrequency } from './index';
+import type { ItemCategory, ItemColor, PlacementHint, UseFrequency, VisibilityTier } from './index';
 
 /**
  * 一個 bounding box（畫面內歸一化座標 0~1，或像素皆可，呼叫方需自洽）。
@@ -44,6 +44,12 @@ export type Detection = {
   useFrequency?: UseFrequency;
   /** 收納師原則 5：是否在黃金區 */
   inGoldenZone?: boolean;
+  /** Home Edit 彩虹分類 */
+  color?: ItemColor;
+  /** 斷捨離七五一法則 */
+  visibilityTier?: VisibilityTier;
+  /** KonMari 直立折疊等擺放方式 */
+  placement?: PlacementHint;
 };
 
 /**

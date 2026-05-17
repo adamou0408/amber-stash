@@ -5,10 +5,13 @@ const KEY = 'amberstash.preferences.v1';
 
 export type UserPreferences = {
   activeMethodologyId: string;
+  /** 是否已完成第一次方法論選擇（onboarding） */
+  onboarded: boolean;
 };
 
 const DEFAULTS: UserPreferences = {
   activeMethodologyId: DEFAULT_METHODOLOGY.id,
+  onboarded: false,
 };
 
 export async function loadPreferences(): Promise<UserPreferences> {
@@ -23,5 +26,13 @@ export async function loadPreferences(): Promise<UserPreferences> {
 
 export async function setActiveMethodology(id: string): Promise<void> {
   const prev = await loadPreferences();
-  await AsyncStorage.setItem(KEY, JSON.stringify({ ...prev, activeMethodologyId: id }));
+  await AsyncStorage.setItem(
+    KEY,
+    JSON.stringify({ ...prev, activeMethodologyId: id, onboarded: true }),
+  );
+}
+
+export async function markOnboarded(): Promise<void> {
+  const prev = await loadPreferences();
+  await AsyncStorage.setItem(KEY, JSON.stringify({ ...prev, onboarded: true }));
 }

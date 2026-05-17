@@ -276,4 +276,5 @@ export const DEFAULT_METHODOLOGY: Methodology = {
   ],
   pricing: { kind: 'free' },
   version: 1,
+  lifecyclePhase: 'maintenance',
 };

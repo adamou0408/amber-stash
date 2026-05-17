@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,6 +11,8 @@ import { SuggestionsScreen } from '@/screens/SuggestionsScreen';
 import { SpacesScreen } from '@/screens/SpacesScreen';
 import { ShoppingScreen } from '@/screens/ShoppingScreen';
 import { LabelsScreen } from '@/screens/LabelsScreen';
+import { OnboardingScreen } from '@/screens/OnboardingScreen';
+import { loadPreferences } from '@/storage/preferencesStorage';
 import type { ItemsStackParamList } from './types';
 
 const Tabs = createBottomTabNavigator();
@@ -34,43 +38,72 @@ function tabIcon(emoji: string) {
   );
 }
 
+function MainTabs() {
+  return (
+    <Tabs.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.bg },
+        headerTitleStyle: { color: colors.text },
+        tabBarActiveTintColor: colors.primary,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+      }}
+    >
+      <Tabs.Screen
+        name="ItemsTab"
+        component={ItemsStackNav}
+        options={{ title: '物品', headerShown: false, tabBarIcon: tabIcon('📦') }}
+      />
+      <Tabs.Screen
+        name="Spaces"
+        component={SpacesScreen}
+        options={{ title: '空間', tabBarIcon: tabIcon('🗄️') }}
+      />
+      <Tabs.Screen
+        name="Labels"
+        component={LabelsScreen}
+        options={{ title: '標籤', tabBarIcon: tabIcon('🏷️') }}
+      />
+      <Tabs.Screen
+        name="Suggestions"
+        component={SuggestionsScreen}
+        options={{ title: '建議', tabBarIcon: tabIcon('💡') }}
+      />
+      <Tabs.Screen
+        name="Shopping"
+        component={ShoppingScreen}
+        options={{ title: '購物', tabBarIcon: tabIcon('🛒') }}
+      />
+    </Tabs.Navigator>
+  );
+}
+
 export function RootNavigator() {
+  const [onboarded, setOnboarded] = useState<boolean | null>(null);
+
+  const refresh = useCallback(async () => {
+    const prefs = await loadPreferences();
+    setOnboarded(prefs.onboarded);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  if (onboarded === null) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!onboarded) {
+    return <OnboardingScreen onDone={refresh} />;
+  }
+
   return (
     <NavigationContainer>
-      <Tabs.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: colors.bg },
-          headerTitleStyle: { color: colors.text },
-          tabBarActiveTintColor: colors.primary,
-          tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        }}
-      >
-        <Tabs.Screen
-          name="ItemsTab"
-          component={ItemsStackNav}
-          options={{ title: '物品', headerShown: false, tabBarIcon: tabIcon('📦') }}
-        />
-        <Tabs.Screen
-          name="Spaces"
-          component={SpacesScreen}
-          options={{ title: '空間', tabBarIcon: tabIcon('🗄️') }}
-        />
-        <Tabs.Screen
-          name="Labels"
-          component={LabelsScreen}
-          options={{ title: '標籤', tabBarIcon: tabIcon('🏷️') }}
-        />
-        <Tabs.Screen
-          name="Suggestions"
-          component={SuggestionsScreen}
-          options={{ title: '建議', tabBarIcon: tabIcon('💡') }}
-        />
-        <Tabs.Screen
-          name="Shopping"
-          component={ShoppingScreen}
-          options={{ title: '購物', tabBarIcon: tabIcon('🛒') }}
-        />
-      </Tabs.Navigator>
+      <MainTabs />
     </NavigationContainer>
   );
 }

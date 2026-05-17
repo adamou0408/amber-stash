@@ -19,12 +19,20 @@ import { Button } from '@/components/Button';
 import { colors } from '@/theme/colors';
 import {
   CATEGORY_LABEL,
+  COLOR_HEX,
+  COLOR_LABEL,
   FREQUENCY_EMOJI,
   FREQUENCY_LABEL,
+  PLACEMENT_LABEL,
   SPACE_EMOJI,
+  TIER_EMOJI,
+  TIER_LABEL,
   type ItemCategory,
+  type ItemColor,
+  type PlacementHint,
   type Space,
   type UseFrequency,
+  type VisibilityTier,
 } from '@/types';
 import type { Detection } from '@/types/snapshot';
 import { addItem, loadItems } from '@/storage/itemsStorage';
@@ -45,6 +53,9 @@ type Props = NativeStackScreenProps<ItemsStackParamList, 'AddItem'>;
 
 const CATEGORIES = Object.keys(CATEGORY_LABEL) as ItemCategory[];
 const FREQUENCIES = Object.keys(FREQUENCY_LABEL) as UseFrequency[];
+const COLORS = Object.keys(COLOR_LABEL) as ItemColor[];
+const TIERS = Object.keys(TIER_LABEL) as VisibilityTier[];
+const PLACEMENTS = Object.keys(PLACEMENT_LABEL) as PlacementHint[];
 
 type Mode = 'capture' | 'review';
 
@@ -62,6 +73,11 @@ export function AddItemScreen({ navigation }: Props) {
   // 收納師原則 1/5/8 — 使用頻率與黃金區
   const [useFrequency, setUseFrequency] = useState<UseFrequency | undefined>();
   const [inGoldenZone, setInGoldenZone] = useState<boolean>(false);
+  // 多派擴充 — 顏色（Home Edit）/ 可見性層級（斷捨離七五一）/ 擺放方式（KonMari）
+  const [color, setColor] = useState<ItemColor | undefined>();
+  const [visibilityTier, setVisibilityTier] = useState<VisibilityTier | undefined>();
+  const [placement, setPlacement] = useState<PlacementHint | undefined>();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   // ---------- session state ----------
   const [mode, setMode] = useState<Mode>('capture');
@@ -164,6 +180,9 @@ export function AddItemScreen({ navigation }: Props) {
     setPhotoBase64(undefined);
     setUseFrequency(undefined);
     setInGoldenZone(false);
+    setColor(undefined);
+    setVisibilityTier(undefined);
+    setPlacement(undefined);
   }
 
   /**
@@ -191,6 +210,9 @@ export function AddItemScreen({ navigation }: Props) {
       note: note.trim() || undefined,
       useFrequency,
       inGoldenZone,
+      color,
+      visibilityTier,
+      placement,
     };
     setPendings((p) => [pending, ...p]);
     resetCurrentInputs();
@@ -219,6 +241,9 @@ export function AddItemScreen({ navigation }: Props) {
       spaceId,
       useFrequency,
       inGoldenZone,
+      color,
+      visibilityTier,
+      placement,
     });
     navigation.goBack();
   }
@@ -298,6 +323,9 @@ export function AddItemScreen({ navigation }: Props) {
         spaceId,
         useFrequency: p.useFrequency,
         inGoldenZone: p.inGoldenZone,
+        color: p.color,
+        visibilityTier: p.visibilityTier,
+        placement: p.placement,
       });
     }
 
@@ -500,6 +528,87 @@ export function AddItemScreen({ navigation }: Props) {
           </Pressable>
         )}
 
+        <Pressable
+          onPress={() => setAdvancedOpen((v) => !v)}
+          style={styles.advancedToggle}
+        >
+          <Text style={styles.advancedToggleText}>
+            {advancedOpen ? '▼' : '▶'} 進階屬性（顏色 / 七五一層級 / 擺放方式）
+          </Text>
+        </Pressable>
+
+        {advancedOpen && (
+          <View>
+            <Text style={styles.labelHint}>用於 The Home Edit 彩虹分類、KonMari 同色系收納</Text>
+            <Text style={styles.label}>顏色</Text>
+            <View style={styles.chips}>
+              {COLORS.map((c) => {
+                const active = color === c;
+                const hex = COLOR_HEX[c];
+                return (
+                  <Pressable
+                    key={c}
+                    onPress={() => setColor(active ? undefined : c)}
+                    style={[
+                      styles.colorChip,
+                      active && styles.colorChipActive,
+                      { borderColor: active ? hex : colors.border },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.colorSwatch,
+                        { backgroundColor: c === 'multi' ? colors.surface : hex },
+                      ]}
+                    />
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      {COLOR_LABEL[c]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.labelHint}>斷捨離七五一法則 — 看得見 7 成 / 收 5 成 / 紀念 1 成</Text>
+            <Text style={styles.label}>可見性層級</Text>
+            <View style={styles.chips}>
+              {TIERS.map((t) => {
+                const active = visibilityTier === t;
+                return (
+                  <Pressable
+                    key={t}
+                    onPress={() => setVisibilityTier(active ? undefined : t)}
+                    style={[styles.chip, active && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      {TIER_EMOJI[t]} {TIER_LABEL[t]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.labelHint}>KonMari 直立摺、工具站立法</Text>
+            <Text style={styles.label}>擺放方式</Text>
+            <View style={styles.chips}>
+              {PLACEMENTS.map((pl) => {
+                const active = placement === pl;
+                return (
+                  <Pressable
+                    key={pl}
+                    onPress={() => setPlacement(active ? undefined : pl)}
+                    style={[styles.chip, active && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      {PLACEMENT_LABEL[pl]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         <Text style={styles.label}>備註</Text>
         <TextInput
           style={[styles.input, styles.textarea]}
@@ -664,4 +773,38 @@ const styles = StyleSheet.create({
   },
   zoneToggleText: { fontSize: 13, color: colors.text },
   zoneToggleTextOn: { color: '#fff', fontWeight: '600' },
+  advancedToggle: {
+    marginTop: 14,
+    paddingVertical: 8,
+  },
+  advancedToggleText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  labelHint: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 12,
+    marginBottom: 2,
+  },
+  colorChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  colorChipActive: { borderWidth: 2 },
+  colorSwatch: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
 });

@@ -16,9 +16,13 @@ import { Button } from '@/components/Button';
 import { colors } from '@/theme/colors';
 import {
   CATEGORY_LABEL,
+  COLOR_HEX,
+  COLOR_LABEL,
   FREQUENCY_EMOJI,
   FREQUENCY_LABEL,
   SPACE_EMOJI,
+  TIER_EMOJI,
+  TIER_LABEL,
   type Item,
   type Space,
   type UseFrequency,
@@ -171,12 +175,34 @@ export function ItemsScreen({ navigation }: Props) {
                     </View>
                   ) : (
                     <View style={[styles.spacePill, styles.pillWarn]}>
-                      <Text style={styles.pillWarnText}>未設頻率</Text>
+                      <Text style={styles.pillWarnText}>待你定義頻率</Text>
                     </View>
                   )}
                   {item.inGoldenZone ? (
                     <View style={[styles.spacePill, styles.pillGold]}>
                       <Text style={styles.pillGoldText}>✨ 黃金區</Text>
+                    </View>
+                  ) : null}
+                  {item.color ? (
+                    <View style={[styles.spacePill, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                      <View
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 5,
+                          backgroundColor: COLOR_HEX[item.color],
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }}
+                      />
+                      <Text style={styles.spacePillText}>{COLOR_LABEL[item.color]}</Text>
+                    </View>
+                  ) : null}
+                  {item.visibilityTier ? (
+                    <View style={styles.spacePill}>
+                      <Text style={styles.spacePillText}>
+                        {TIER_EMOJI[item.visibilityTier]} {TIER_LABEL[item.visibilityTier]}
+                      </Text>
                     </View>
                   ) : null}
                 </View>

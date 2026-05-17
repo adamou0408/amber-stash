@@ -68,22 +68,54 @@ export async function loadDemoData(): Promise<{
     },
   ];
 
-  // demo 資料故意混合：有些設好 frequency + golden zone，有些沒設 — 用來展示規則差異
+  // demo 資料故意混合多派可演示的特徵：
+  //  - 頻率 + 黃金區（M5.5-T1 已有）
+  //  - 顏色（Home Edit 彩虹分類）
+  //  - 可見性層級（斷捨離七五一）
+  //  - 擺放方式（KonMari 直立摺）
   const items: Item[] = [
-    mk('冬季羽絨外套', 'clothing', 3, wardrobeId, now, 'monthly', false),
-    mk('針織毛衣', 'clothing', 8, wardrobeId, now - 1000, 'weekly', true),
-    mk('長袖襯衫', 'clothing', 12, wardrobeId, now - 2000, 'weekly', true),
-    mk('行動電源', 'electronics', 2, drawerId, now - 3000, 'daily', true),
-    mk('USB-C 線', 'electronics', 5, drawerId, now - 4000, 'daily', true),
-    mk('家用鑰匙', 'tools', 3, drawerId, now - 5000, 'daily', true),
-    mk('筆記型電腦', 'electronics', 1, deskId, now - 6000, 'daily', true),
-    mk('A4 筆記本', 'books', 4, deskId, now - 7000, 'weekly'),
-    mk('原子筆', 'books', 12, deskId, now - 8000, 'daily', false),
-    mk('技術書籍', 'books', 18, shelfId, now - 9000, 'monthly'),
-    mk('相框', 'sentimental', 6, shelfId, now - 10000, 'rarely'),
-    mk('露營帳篷', 'tools', 1, storageRoomId, now - 11000, 'rarely'),
-    mk('登山背包', 'tools', 2, storageRoomId, now - 12000, 'rarely'),
-    mk('行李箱', 'tools', 3, storageRoomId, now - 13000, 'rarely'),
+    mk('冬季羽絨外套', 'clothing', 3, wardrobeId, now, {
+      useFrequency: 'monthly', color: 'black', visibilityTier: 'stored', placement: 'hanging',
+    }),
+    mk('針織毛衣', 'clothing', 8, wardrobeId, now - 1000, {
+      useFrequency: 'weekly', inGoldenZone: true, color: 'gray', visibilityTier: 'show', placement: 'vertical',
+    }),
+    mk('長袖襯衫', 'clothing', 12, wardrobeId, now - 2000, {
+      useFrequency: 'weekly', inGoldenZone: true, color: 'white', visibilityTier: 'show', placement: 'hanging',
+    }),
+    mk('行動電源', 'electronics', 2, drawerId, now - 3000, {
+      useFrequency: 'daily', inGoldenZone: true, color: 'black', visibilityTier: 'stored',
+    }),
+    mk('USB-C 線', 'electronics', 5, drawerId, now - 4000, {
+      useFrequency: 'daily', inGoldenZone: true, color: 'white', visibilityTier: 'stored', placement: 'rolled',
+    }),
+    mk('家用鑰匙', 'tools', 3, drawerId, now - 5000, {
+      useFrequency: 'daily', inGoldenZone: true, color: 'gray', visibilityTier: 'show',
+    }),
+    mk('筆記型電腦', 'electronics', 1, deskId, now - 6000, {
+      useFrequency: 'daily', inGoldenZone: true, color: 'gray', visibilityTier: 'show',
+    }),
+    mk('A4 筆記本', 'books', 4, deskId, now - 7000, {
+      useFrequency: 'weekly', color: 'multi', visibilityTier: 'show', placement: 'vertical',
+    }),
+    mk('原子筆', 'books', 12, deskId, now - 8000, {
+      useFrequency: 'daily', inGoldenZone: false, color: 'blue', visibilityTier: 'show', placement: 'standing',
+    }),
+    mk('技術書籍', 'books', 18, shelfId, now - 9000, {
+      useFrequency: 'monthly', color: 'multi', visibilityTier: 'show', placement: 'vertical',
+    }),
+    mk('相框', 'sentimental', 6, shelfId, now - 10000, {
+      useFrequency: 'rarely', color: 'brown', visibilityTier: 'shrine', placement: 'standing',
+    }),
+    mk('露營帳篷', 'tools', 1, storageRoomId, now - 11000, {
+      useFrequency: 'rarely', color: 'green', visibilityTier: 'stored',
+    }),
+    mk('登山背包', 'tools', 2, storageRoomId, now - 12000, {
+      useFrequency: 'rarely', color: 'orange', visibilityTier: 'stored',
+    }),
+    mk('行李箱', 'tools', 3, storageRoomId, now - 13000, {
+      useFrequency: 'rarely', color: 'black', visibilityTier: 'stored', placement: 'standing',
+    }),
   ];
 
   const shopping: ShoppingItem[] = [
@@ -127,14 +159,21 @@ export async function clearAllData(): Promise<void> {
   ]);
 }
 
+type MkOpts = {
+  useFrequency?: Item['useFrequency'];
+  inGoldenZone?: boolean;
+  color?: Item['color'];
+  visibilityTier?: Item['visibilityTier'];
+  placement?: Item['placement'];
+};
+
 function mk(
   name: string,
   category: Item['category'],
   quantity: number,
   spaceId: string,
   createdAt: number,
-  useFrequency?: Item['useFrequency'],
-  inGoldenZone?: boolean,
+  opts: MkOpts = {},
 ): Item {
   return {
     id: String(uuid.v4()),
@@ -142,8 +181,7 @@ function mk(
     category,
     quantity,
     spaceId,
-    useFrequency,
-    inGoldenZone,
+    ...opts,
     createdAt,
     updatedAt: createdAt,
   };

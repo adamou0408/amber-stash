@@ -1,7 +1,16 @@
 import type { DecisionContext, Methodology, RuleCondition } from '@/types/methodology';
-import type { Item, Space, Suggestion, UseFrequency } from '@/types';
+import type {
+  Item,
+  ItemColor,
+  Space,
+  Suggestion,
+  UseFrequency,
+  VisibilityTier,
+} from '@/types';
+import { COLOR_LABEL, TIER_TARGET_RATIO } from '@/types';
 
 const FREQUENCIES: UseFrequency[] = ['daily', 'weekly', 'monthly', 'rarely'];
+const TIERS: VisibilityTier[] = ['show', 'stored', 'shrine'];
 
 export function buildContext(items: Item[], spaces: Space[]): DecisionContext {
   const categoryCounts: Record<string, number> = {};
@@ -17,11 +26,21 @@ export function buildContext(items: Item[], spaces: Space[]): DecisionContext {
     monthly: 0,
     rarely: 0,
   };
+  const colorCounts: Record<string, number> = {};
+  const categoryColorsSet: Record<string, Set<string>> = {};
+  const tierCounts: Record<VisibilityTier, number> = {
+    show: 0,
+    stored: 0,
+    shrine: 0,
+  };
   let unfrequentedCount = 0;
+  let untieredCount = 0;
+  let totalQty = 0;
   const itemCountBySpace: Record<string, number> = {};
 
   for (const it of items) {
     categoryCounts[it.category] = (categoryCounts[it.category] ?? 0) + it.quantity;
+    totalQty += it.quantity;
     if (it.useFrequency) {
       frequencyCounts[it.useFrequency] += it.quantity;
       if (!it.inGoldenZone) {
@@ -32,6 +51,39 @@ export function buildContext(items: Item[], spaces: Space[]): DecisionContext {
     }
     if (it.spaceId) {
       itemCountBySpace[it.spaceId] = (itemCountBySpace[it.spaceId] ?? 0) + it.quantity;
+    }
+    if (it.color) {
+      colorCounts[it.color] = (colorCounts[it.color] ?? 0) + it.quantity;
+      if (!categoryColorsSet[it.category]) categoryColorsSet[it.category] = new Set();
+      categoryColorsSet[it.category].add(it.color);
+    }
+    if (it.visibilityTier) {
+      tierCounts[it.visibilityTier] += it.quantity;
+    } else {
+      untieredCount += it.quantity;
+    }
+  }
+
+  const categoryColorDiversity: Record<string, number> = {};
+  for (const cat of Object.keys(categoryColorsSet)) {
+    categoryColorDiversity[cat] = categoryColorsSet[cat].size;
+  }
+
+  // 主導色 = 件數最多的顏色
+  let dominantColor: string | undefined;
+  let dominantCount = 0;
+  for (const [color, count] of Object.entries(colorCounts)) {
+    if (count > dominantCount) {
+      dominantCount = count;
+      dominantColor = color;
+    }
+  }
+
+  // 七五一法則：實際比例 = 該層件數 / 總件數
+  const tierRatios: Record<VisibilityTier, number> = { show: 0, stored: 0, shrine: 0 };
+  if (totalQty > 0) {
+    for (const t of TIERS) {
+      tierRatios[t] = tierCounts[t] / totalQty;
     }
   }
 
@@ -61,6 +113,12 @@ export function buildContext(items: Item[], spaces: Space[]): DecisionContext {
     unfrequentedCount,
     mostCrowdedSpaceName,
     mostCrowdedSpaceRatio,
+    colorCounts,
+    categoryColorDiversity,
+    dominantColor,
+    tierRatios,
+    tierCounts,
+    untieredCount,
   };
 }
 
@@ -101,6 +159,18 @@ export function evaluate(cond: RuleCondition, ctx: DecisionContext): boolean {
       return compare(ctx.zoneMismatchCounts[cond.frequency], cond.op, cond.value);
     case 'unfrequented':
       return compare(ctx.unfrequentedCount, cond.op, cond.value);
+    case 'colorDiversity':
+      return compare(ctx.categoryColorDiversity[cond.category] ?? 0, cond.op, cond.value);
+    case 'colorCount':
+      return compare(ctx.colorCounts[cond.color] ?? 0, cond.op, cond.value);
+    case 'tierExceeds': {
+      const actual = ctx.tierRatios[cond.tier];
+      const target = TIER_TARGET_RATIO[cond.tier];
+      const excess = actual - target;
+      return cond.op === '>' ? excess > cond.value : excess >= cond.value;
+    }
+    case 'untieredCount':
+      return compare(ctx.untieredCount, cond.op, cond.value);
   }
 }
 
@@ -108,9 +178,6 @@ function fillTemplate(tmpl: string, ctx: DecisionContext): string {
   return tmpl.replace(/\{(\w+)\}/g, (_, key) => {
     if (key === 'total') {
       return String(Object.values(ctx.categoryCounts).reduce((a, b) => a + b, 0));
-    }
-    if (key === 'daily' && key in ctx.frequencyCounts) {
-      return String(ctx.frequencyCounts.daily);
     }
     if (FREQUENCIES.includes(key as UseFrequency)) {
       return String(ctx.frequencyCounts[key as UseFrequency]);
@@ -123,6 +190,17 @@ function fillTemplate(tmpl: string, ctx: DecisionContext): string {
         : '?%';
     }
     if (key === 'dailyMismatch') return String(ctx.zoneMismatchCounts.daily);
+    if (key === 'dominantColor') {
+      return ctx.dominantColor ? COLOR_LABEL[ctx.dominantColor as ItemColor] ?? ctx.dominantColor : '';
+    }
+    if (key === 'colorVarieties') return String(Object.keys(ctx.colorCounts).length);
+    if (TIERS.includes(key as VisibilityTier)) {
+      return String(ctx.tierCounts[key as VisibilityTier]);
+    }
+    if (key === 'showRatio') return `${Math.round(ctx.tierRatios.show * 100)}%`;
+    if (key === 'storedRatio') return `${Math.round(ctx.tierRatios.stored * 100)}%`;
+    if (key === 'shrineRatio') return `${Math.round(ctx.tierRatios.shrine * 100)}%`;
+    if (key === 'untiered') return String(ctx.untieredCount);
     return String(ctx.categoryCounts[key] ?? 0);
   });
 }
