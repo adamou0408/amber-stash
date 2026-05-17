@@ -159,18 +159,25 @@ export const LIAOHSINYUN_METHODOLOGY: Methodology = {
       id: 'entrance-tray',
       appliesWhen: { type: 'hasSpaceKind', kind: 'drawer' },
       pick: {
-        nameTemplate: '玄關托盤（出門組）',
+        nameTemplate: 'IKEA RIMFORSA 玄關托盤（出門組）',
         reasonTemplate:
-          '鑰匙、口罩、悠遊卡集中放一個托盤。建議 IKEA RIMFORSA 或木質托盤約 NT$ 300-800。',
+          '鑰匙、口罩、悠遊卡集中放一個托盤。或選木質款。',
+        brand: 'IKEA',
+        sku: 'RIMFORSA',
+        priceTwdMin: 300,
+        priceTwdMax: 800,
       },
     },
     {
       id: 'umbrella-stand',
       appliesWhen: { type: 'hasSpaceKind', kind: 'drawer' },
       pick: {
-        nameTemplate: '伸縮傘桶（防滴水）',
+        nameTemplate: 'HOLA 編織傘架（防滴水）',
         reasonTemplate:
-          '台灣雨多。HOLA 編織款 NT$ 500-900，底部有排水盤的最理想。放玄關腳邊。',
+          '台灣雨多。底部有排水盤的最理想。放玄關腳邊。',
+        brand: 'HOLA',
+        priceTwdMin: 500,
+        priceTwdMax: 900,
       },
     },
     {
@@ -179,7 +186,9 @@ export const LIAOHSINYUN_METHODOLOGY: Methodology = {
       pick: {
         nameTemplate: '除濕包 × 4 個',
         reasonTemplate:
-          '衣櫃 / 鞋櫃各放一個。台灣濕度全年 70%+，是衣物霉斑與發臭的最大主因。NT$ 50-150 一個，每月或變色就換。',
+          '衣櫃 / 鞋櫃各放一個。台灣濕度全年 70%+，是衣物霉斑與發臭的最大主因。每月或變色就換。',
+        priceTwdMin: 50,
+        priceTwdMax: 150,
       },
     },
   ],

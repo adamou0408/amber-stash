@@ -9,31 +9,41 @@
 
 ## 1. 方法論版圖
 
-### 1.1 內建 6 派對照
+### 1.1 內建 10 派對照（M5.5-T1.9 後）
 
 | 派別 | id | lifecyclePhase | 創始 | 核心問句 |
 |---|---|---|---|---|
 | Amber Stash 通用 | `amberstash-default` | maintenance | 系統 | 從結構推出最大公約數 |
 | 斷捨離 | `danshari-zh` | mindset | 山下英子（日） | 現在的我需要嗎？ |
+| 佐藤可士和超整理術 | `kashiwa-sato-zh` | mindset | 佐藤可士和（日） | 本質問題是什麼？ |
 | 怦然心動 KonMari | `konmari-zh` | deep-clean | 近藤麻理惠（日） | 拿起來會心動嗎？ |
+| 衣櫥醫生 | `wardrobe-doctor-zh` | deep-clean | 賴庭荷（台灣） | 穿得出去嗎？跟現有的能搭嗎？ |
 | 廖心筠聯想收納 | `liaohsinyun-zh` | maintenance | 廖心筠（台灣） | 用的當下，下一個會用什麼？ |
+| 小坪數 / 租屋 | `micro-rental-zh` | maintenance | 系統 + 多位收納師整合 | 不能釘牆 / 搬家能不能帶走？ |
 | The Home Edit | `home-edit-zh` | aesthetic | Clea & Joanna（美） | 美觀＋功能能否並重？ |
 | 寬容派 | `gentle-zh` | gentle-reset | KC Davis（美） | 家為你服務，不是你為家服務 |
+| 銀髮 / 遺物 | `elder-zh` | gentle-reset | 廖心筠 + 何安蒔 + 銀髮人因工學整合 | 安全 + 傳承優先於減量 |
+
+**每個 phase 的派數**：mindset 2 / deep-clean 2 / maintenance 3 / aesthetic 1 / gentle-reset 2 = 共 10 派。
 
 ### 1.2 未內建（候選 / 暫不做）
 
 | 派別 | 創始 | 為何不內建（理由）|
 |---|---|---|
-| 佐藤可士和超整理術 | 佐藤可士和 | 偏商業設計用，不在家庭收納主流 |
-| 無印良品哲學 | MUJI | 純風格哲學，已被多派吸收 |
-| 5S | 工業 | 偏 workspace，不在 v4 範圍 |
+| 無印良品哲學 | MUJI | 純風格哲學，已被多派吸收（家具 / 視覺由 Home Edit 處理）|
+| 5S | 工業 | 偏 workspace，跟 kashiwa-sato 重疊度高 |
 | Andrew Mellen 三角理論 | Andrew Mellen | 規則已被各派整合（一物一家 = 黃金區、一進一出 = 已有）|
 | 20/20 法則 | The Minimalists | 不獨立成派，已寫進 KonMari + 斷捨離規則文字內 |
 | FlyLady 15 分鐘 | Marla Cilley | 與 KC Davis 高度重疊，已整合到 gentle-zh |
 | Phyllis 零雜物 | 陳虹樺 | 與斷捨離高度重疊（同源 NAPO + KonMari） |
-| 何安蒔 | Sasha Ho | 「整理＝面對自我」與斷捨離 mindset 高度重疊 |
-| 賴庭荷衣櫥醫生 | 賴庭荷 | 衣物專科，v5 考慮加為衣物子方法論 |
-| 遺物整理（廖心筠 / 何安蒔）| 多人 | 特殊情境，v5 範圍（超高齡社會需求）|
+| 何安蒔 | Sasha Ho | 「整理＝面對自我」與斷捨離 mindset 高度重疊；遺物相關已整合到 elder-zh |
+| 兒童 / 蒙特梭利 | 多人 | v5 候選（kids constraint 已預備） |
+
+### 1.3 ~~原本不做、M5.5-T1.9 改為內建~~
+
+- ~~佐藤可士和超整理術~~ → 已內建 `kashiwa-sato-zh`（mindset 與斷捨離並列）
+- ~~賴庭荷衣櫥醫生~~ → 已內建 `wardrobe-doctor-zh`（deep-clean，appliesTo 限 clothing）
+- ~~遺物整理 / 銀髮~~ → 已內建 `elder-zh`（gentle-reset 與 KC Davis 並列）
 
 ---
 
@@ -42,15 +52,16 @@
 | primitive | 解鎖的派 / 規則 |
 |---|---|
 | `Item.useFrequency` (daily/weekly/monthly/rarely) | 所有派（最基礎信號）|
-| `Item.inGoldenZone` | Amber Stash 原則 5、廖心筠動線 |
-| `Item.color` (12 色) | Home Edit 彩虹、KonMari 同色系 |
+| `Item.inGoldenZone` | Amber Stash 原則 5、廖心筠動線、銀髮黃金區重定義 |
+| `Item.color` (12 色) | Home Edit 彩虹、KonMari 同色系、衣櫥醫生主色 70/30 |
 | `Item.visibilityTier` (show/stored/shrine) | 斷捨離七五一 |
-| `Item.placement` (vertical/flat/hanging/standing/rolled) | KonMari 直立摺、工具站立 |
+| `Item.placement` (vertical/flat/hanging/standing/rolled) | KonMari 直立摺、衣櫥醫生三種摺法、工具站立 |
 | `Item.associationHint` (free text) | 廖心筠聯想收納 |
-| `Item.isHeirloom` (bool) | 廖心筠華人文化、KonMari 紀念類 |
-| `Space.capacityEstimate` | Amber Stash 80% 原則、斷捨離七五一 |
+| `Item.isHeirloom` (bool) | 廖心筠華人文化、KonMari 紀念類、銀髮 / 遺物 |
+| `Space.capacityEstimate` | Amber Stash 80% 原則、斷捨離七五一、小坪數 / 租屋警示 |
+| `Space.constraints` (rental/micro/elder/kids) | 小坪數 / 租屋方法論、銀髮方法論 |
 
-**6 個 Item 欄位 + 1 個 Space 欄位 = 完整支撐 6 派**。
+**7 個 Item 欄位 + 2 個 Space 欄位 = 完整支撐 10 派**。
 
 設計原則：不為每條方法論加獨立欄位，而是萃取共用原語。新方法論加入時先檢查能否用既有 primitive 表達。
 

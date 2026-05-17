@@ -152,9 +152,13 @@ export const HOME_EDIT_METHODOLOGY: Methodology = {
       id: 'clear-bins-multi',
       appliesWhen: { type: 'categoryCount', category: '*', op: '>', value: 20 },
       pick: {
-        nameTemplate: '透明翻蓋收納盒（同系列、3 種尺寸）',
+        nameTemplate: 'IKEA SAMLA / KUGGIS 透明收納盒系列（6+ 入）',
         reasonTemplate:
-          'The Home Edit 的核心工具 — 同款不同尺寸，疊起來視覺立刻統一。建議 IKEA SAMLA / KUGGIS 同系列買 6+ 入。',
+          'The Home Edit 的核心工具 — 同款不同尺寸，疊起來視覺立刻統一。',
+        brand: 'IKEA',
+        sku: 'SAMLA / KUGGIS',
+        priceTwdMin: 79,
+        priceTwdMax: 599,
       },
     },
     {
@@ -163,7 +167,11 @@ export const HOME_EDIT_METHODOLOGY: Methodology = {
       pick: {
         nameTemplate: 'Brother PT-P300BT 標籤機',
         reasonTemplate:
-          '藍牙連手機列印標籤、字體 / 框線可自選。約 NT$2,000，是長期投資 — 標籤化每個收納盒立即升級到 IG 級。',
+          '藍牙連手機列印標籤、字體 / 框線可自選。是長期投資 — 標籤化每個收納盒立即升級到 IG 級。',
+        brand: 'Brother',
+        sku: 'PT-P300BT',
+        priceTwdMin: 1990,
+        priceTwdMax: 2500,
       },
     },
     {
@@ -172,16 +180,21 @@ export const HOME_EDIT_METHODOLOGY: Methodology = {
       pick: {
         nameTemplate: '壓克力旋轉化妝品收納盤',
         reasonTemplate:
-          '看得見每支口紅 / 粉底，旋轉拿取無死角。Costco / 蝦皮約 NT$500-1500 一件。',
+          '看得見每支口紅 / 粉底，旋轉拿取無死角。Costco / 蝦皮均有售。',
+        priceTwdMin: 500,
+        priceTwdMax: 1500,
       },
     },
     {
       id: 'unified-jars',
       appliesWhen: { type: 'categoryCount', category: 'kitchen', op: '>=', value: 8 },
       pick: {
-        nameTemplate: '密封儲物罐 × 6 同系列',
+        nameTemplate: '樂扣樂扣 Fresh Block / 天馬同系列密封罐 × 6',
         reasonTemplate:
-          '乾貨統一裝進同款罐 → 廚房視覺立刻整齊。建議買 6 入起、同形狀、可疊。',
+          '乾貨統一裝進同款罐 → 廚房視覺立刻整齊。建議同形狀、可疊。',
+        brand: '樂扣樂扣 / 天馬',
+        priceTwdMin: 600,
+        priceTwdMax: 1800,
       },
     },
   ],

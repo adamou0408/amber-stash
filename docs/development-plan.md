@@ -110,6 +110,18 @@
   - 跨派規則文字加入：KonMari 拍照留念再放手（Chu & Shu 2023）、KonMari + 斷捨離 20/20 法則
   - Onboarding：5 個 phase 卡片
   - 新增永久知識庫 `docs/methodology-knowledge.md`（10 章節 + 增派 checklist）
+- [x] **M5.5-T1.9 A-H 八項整合擴張（v4，98 tests）**
+  - **A** 競品分析 `docs/competitive-analysis.md` v2：加入台灣本土觀察（藍海 / Whering 對標 / 整理產業數字 / 心理文化獨特性）+ v4 修訂結論
+  - **B** Onboarding 加 CIR 自評三層（輕度→maintenance / 中度→mindset / 重度→gentle-reset + CBT 安全建議）
+  - **C** 新 `docs/v5-monetization-redesign.md`：整理師媒合 + 後台訂閱 + 課程三條線、單位經濟試算、與 v3 m6-outreach 材料的轉化方式
+  - **D** 衣櫥醫生方法論 wardrobe-doctor-zh（deep-clean）— 9 條規則，5-4-3-2-1 膠囊衣櫥 / 三種摺法 / LGBTQ+ 中性穿搭友善
+  - **E** 銀髮 / 遺物整理 elder-zh（gentle-reset）— 9 條規則，肚臍-肩黃金區 / 28 格藥盒 / 衛福部 1966 補助 / 遺物 3 個月情緒沉澱
+  - **F** ShoppingRule.pick 加 brand/sku/priceTwdMin/priceTwdMax 欄位；既有 shopping rules 補上品牌（IKEA / MUJI / NITORI / IRIS / 3M / Brother / HOLA）與價格範圍；ShoppingScreen UI 顯示品牌 pill + 價格
+  - **G** 小坪數租屋 micro-rental-zh（maintenance）— 9 條規則，垂直空間 / 3M 無痕 / 洞洞板 / 多功能家具 / 搬家友善
+  - **H** 佐藤可士和 kashiwa-sato-zh（mindset）— 8 條規則，桌面 = 思考工具 / 三層次整理 / 本質問題分類 / 視覺密度 = 認知負擔
+  - 新增 Space.constraints 欄位 (rental / micro / elder / kids)
+  - methodologies/index 註冊 10 派（共 5 個 lifecycle phase，每個 phase 有 2-3 派）
+  - 新增 CIR 量表 + CIR_TO_PHASE map + CIR_SEVERE_ADVISORY（引 Tolin 2012 + CBT）
 - [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
 
 ### ⚠️ 架構做了但 UX/功能未完整（M5.5 補完）
@@ -545,6 +557,19 @@ HTML/CSS 開發迭代快、列印 + PDF 一條路徑兩用途。雷雕級 SVG ou
 - 連動下架：M6 舊（內容變現）、M7 舊（客製箱銷售）、M8 訂閱金流 / 埋點 / Landing waitlist
 - 連動保留：M3 方法論引擎（讓建議真有用的核心）、M5 Claude Vision（壓低錄入摩擦的關鍵）
 - 可逆：若 M6 使用者煙霧測試驗證 PMF，v5 可重新評估啟用任一變現線（材料 / code 都保留）
+
+### ADR-011 · 八大維度擴張：從 6 派 → 10 派 + 自評 + 品牌價格
+- 觸發：使用者依台灣收納全景研究報告問「這份報告可以協助專案規劃的哪些地方」並要求 A-H 八項全做
+- 決策：
+  - **新增 4 派方法論**（10 派共存）：衣櫥醫生 / 銀髮 / 小坪數租屋 / 佐藤可士和
+  - **Onboarding 加 Frost CIR 自評**：3 級分流；重度顯示 CBT 安全建議（Tolin 2012 證據）
+  - **ShoppingRule 補品牌 / 價格 / SKU**：購物推薦從通用名稱升級為「IKEA SKUBB NT$ 599」等可動性高的建議
+  - **競品分析 v2**：明確定位 = 全屋方法論顧問 + 華人在地，而非衣物專（Whering）或 inventory（Sortly）競爭
+  - **v5 變現重設計獨立文件**：整理師媒合替代 v3 訂閱模式，但 v4 期間嚴格不啟動
+- 拒絕的設計：
+  - 「為衣物 / 銀髮 / 租屋做獨立 app」— 違反「全屋方法論顧問」定位
+  - 「v4 立刻啟動整理師媒合」— 違反 ADR-009（先做好用 app）
+- 可逆：所有新派可獨立移除；v5 變現文件僅為設計，未影響 code
 
 ### ADR-010 · 多派內建 + lifecycle 切換、不採訂閱付費
 - 觸發：使用者要求支援三派 KonMari / 斷捨離 / Home Edit，後續又加入台灣收納全景報告（廖心筠 / KC Davis / 心理機制證據）

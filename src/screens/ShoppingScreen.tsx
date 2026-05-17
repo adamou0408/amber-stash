@@ -24,11 +24,20 @@ import { loadSpaces } from '@/storage/spacesStorage';
 import { loadLatestSnapshotMap } from '@/storage/sessionStorage';
 import { loadPreferences } from '@/storage/preferencesStorage';
 import { generateShoppingPicks } from '@/services/suggestions';
+import type { ShoppingPick } from '@/services/methodologyEngine';
 import type { ShoppingItem } from '@/types';
+
+function formatPriceRange(min?: number, max?: number): string | null {
+  if (min === undefined && max === undefined) return null;
+  if (min === max && min !== undefined) return `NT$ ${min}`;
+  if (min !== undefined && max !== undefined) return `NT$ ${min}-${max}`;
+  if (min !== undefined) return `NT$ ${min}+`;
+  return `≤ NT$ ${max}`;
+}
 
 export function ShoppingScreen() {
   const [items, setItems] = useState<ShoppingItem[] | null>(null);
-  const [picks, setPicks] = useState<{ name: string; reason: string }[]>([]);
+  const [picks, setPicks] = useState<ShoppingPick[]>([]);
   const [name, setName] = useState('');
 
   const refresh = useCallback(async () => {
@@ -97,19 +106,32 @@ export function ShoppingScreen() {
             {picks.length > 0 && (
               <View style={styles.picksCard}>
                 <Text style={styles.formTitle}>根據你的物品推薦</Text>
-                {picks.map((p) => (
-                  <Pressable
-                    key={p.name}
-                    style={styles.pickRow}
-                    onPress={() => onAdd(p.name, p.reason)}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.pickName}>{p.name}</Text>
-                      <Text style={styles.pickReason}>{p.reason}</Text>
-                    </View>
-                    <Text style={styles.pickAdd}>＋ 加入</Text>
-                  </Pressable>
-                ))}
+                {picks.map((p) => {
+                  const priceLabel = formatPriceRange(p.priceTwdMin, p.priceTwdMax);
+                  return (
+                    <Pressable
+                      key={p.name}
+                      style={styles.pickRow}
+                      onPress={() => onAdd(p.name, p.reason)}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pickName}>{p.name}</Text>
+                        <View style={styles.pickMeta}>
+                          {p.brand ? (
+                            <View style={styles.brandPill}>
+                              <Text style={styles.brandPillText}>{p.brand}</Text>
+                            </View>
+                          ) : null}
+                          {priceLabel ? (
+                            <Text style={styles.priceText}>{priceLabel}</Text>
+                          ) : null}
+                        </View>
+                        <Text style={styles.pickReason}>{p.reason}</Text>
+                      </View>
+                      <Text style={styles.pickAdd}>＋ 加入</Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
           </View>
@@ -187,7 +209,18 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   pickName: { fontSize: 14, fontWeight: '600', color: colors.text },
-  pickReason: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  pickMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  brandPill: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  brandPillText: { fontSize: 10, color: colors.text, fontWeight: '700' },
+  priceText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
+  pickReason: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
   pickAdd: { color: colors.primary, fontWeight: '600' },
   itemRow: {
     flexDirection: 'row',

@@ -401,8 +401,8 @@ describe('methodologyEngine — 多派擴充（v4 五派共存）', () => {
     expect(out.find((s) => s.id.endsWith('::edit-before-aesthetic'))).toBeDefined();
   });
 
-  test('all 6 methodologies are registered, covering 5 distinct lifecycle phases', () => {
-    expect(ALL_METHODOLOGIES.length).toBe(6);
+  test('all 10 methodologies are registered, covering 5 distinct lifecycle phases', () => {
+    expect(ALL_METHODOLOGIES.length).toBe(10);
     const phases = new Set(ALL_METHODOLOGIES.map((m) => m.lifecyclePhase));
     expect(phases.size).toBe(5);
     expect(phases.has('mindset')).toBe(true);
@@ -441,14 +441,20 @@ describe('methodologyEngine — 多派擴充（v4 五派共存）', () => {
 });
 
 describe('methodologyEngine — 廖心筠 + 寬容派擴張（v4 六派共存）', () => {
-  test('all 6 methodologies registered, 5 distinct lifecycle phases (maintenance has 2)', async () => {
-    // dynamic import to avoid hoisting issues
+  test('all 10 methodologies registered (M5.5-T1.9), 5 distinct lifecycle phases', async () => {
     const mod = await import('@/services/methodologies');
-    expect(mod.ALL_METHODOLOGIES.length).toBe(6);
+    expect(mod.ALL_METHODOLOGIES.length).toBe(10);
     const phases = new Set(mod.ALL_METHODOLOGIES.map((m) => m.lifecyclePhase));
     expect(phases.size).toBe(5);
     expect(phases.has('gentle-reset')).toBe(true);
-    expect(mod.methodologiesForPhase('maintenance').length).toBe(2); // default + 廖心筠
+    // maintenance has 3 派: default / 廖心筠 / 小坪數租屋
+    expect(mod.methodologiesForPhase('maintenance').length).toBe(3);
+    // mindset has 2 派: 斷捨離 / 佐藤可士和
+    expect(mod.methodologiesForPhase('mindset').length).toBe(2);
+    // deep-clean has 2 派: KonMari / 衣櫥醫生
+    expect(mod.methodologiesForPhase('deep-clean').length).toBe(2);
+    // gentle-reset has 2 派: KC Davis / 銀髮
+    expect(mod.methodologiesForPhase('gentle-reset').length).toBe(2);
   });
 
   test('unassociatedCount counts items without associationHint', () => {
@@ -525,5 +531,87 @@ describe('methodologyEngine — 廖心筠 + 寬容派擴張（v4 六派共存）
     const rule = out.find((s) => s.id.endsWith('::photo-before-release'));
     expect(rule).toBeDefined();
     expect(rule?.body).toContain('Chu & Shu');
+  });
+});
+
+describe('methodologyEngine — M5.5-T1.9 四派擴張（衣櫥/銀髮/小坪數/佐藤）', () => {
+  test('wardrobe-doctor methodology fires capsule-541-target when clothing >= 15', async () => {
+    const mod = await import('@/services/methodologies/wardrobeDoctor');
+    const items = Array.from({ length: 15 }, (_, i) => it_(`c${i}`, 'clothing', 1));
+    const out = runMethodology(mod.WARDROBE_DOCTOR_METHODOLOGY, items, []);
+    expect(out.find((s) => s.id.endsWith('::capsule-541-target'))).toBeDefined();
+  });
+
+  test('wardrobe-doctor only applies to clothing', async () => {
+    const mod = await import('@/services/methodologies/wardrobeDoctor');
+    expect(mod.WARDROBE_DOCTOR_METHODOLOGY.appliesTo).toEqual(['clothing']);
+  });
+
+  test('elder methodology fires elder-golden-zone-redefined when daily items >= 3', async () => {
+    const mod = await import('@/services/methodologies/elder');
+    const items = [
+      it_('keys', 'tools', 1, { useFrequency: 'daily' }),
+      it_('phone', 'electronics', 1, { useFrequency: 'daily' }),
+      it_('wallet', 'tools', 1, { useFrequency: 'daily' }),
+    ];
+    const out = runMethodology(mod.ELDER_METHODOLOGY, items, []);
+    const rule = out.find((s) => s.id.endsWith('::elder-golden-zone-redefined'));
+    expect(rule).toBeDefined();
+    expect(rule?.title).toContain('肚臍');
+  });
+
+  test('elder methodology fires inheritance-3-month-buffer for heirloom items', async () => {
+    const mod = await import('@/services/methodologies/elder');
+    const item = it_('grandma-watch', 'sentimental', 1);
+    item.isHeirloom = true;
+    const out = runMethodology(mod.ELDER_METHODOLOGY, [item], []);
+    expect(out.find((s) => s.id.endsWith('::inheritance-3-month-buffer'))).toBeDefined();
+  });
+
+  test('micro-rental methodology fires vertical-first when overcapacity', async () => {
+    const mod = await import('@/services/methodologies/microRental');
+    const sp = (kind: 'wardrobe' | 'drawer'): Space => ({
+      id: `sp-${kind}`,
+      name: 'test',
+      kind,
+      capacityEstimate: 5,
+      createdAt: 0,
+    });
+    const items = Array.from({ length: 5 }, (_, i) =>
+      it_(`x${i}`, 'tools', 1, { spaceId: 'sp-drawer' }),
+    );
+    const out = runMethodology(mod.MICRO_RENTAL_METHODOLOGY, items, [sp('drawer')]);
+    expect(out.find((s) => s.id.endsWith('::vertical-first'))).toBeDefined();
+  });
+
+  test('kashiwa-sato methodology fires desk-as-thinking-tool when desk space exists', async () => {
+    const mod = await import('@/services/methodologies/kashiwaSato');
+    const sp_: Space = { id: 'sp-desk', name: 'desk', kind: 'desk', createdAt: 0 };
+    const items = [it_('laptop', 'electronics', 1, { spaceId: 'sp-desk' })];
+    const out = runMethodology(mod.KASHIWA_SATO_METHODOLOGY, items, [sp_]);
+    expect(out[0]?.id.endsWith('::desk-as-thinking-tool')).toBe(true);
+  });
+
+  test('CIR levels map to correct lifecycle phases', async () => {
+    const mod = await import('@/services/methodologies');
+    expect(mod.CIR_TO_PHASE.light).toBe('maintenance');
+    expect(mod.CIR_TO_PHASE.moderate).toBe('mindset');
+    expect(mod.CIR_TO_PHASE.severe).toBe('gentle-reset');
+  });
+
+  test('CIR_SEVERE_ADVISORY mentions CBT and professional support', async () => {
+    const mod = await import('@/services/methodologies');
+    expect(mod.CIR_SEVERE_ADVISORY).toContain('CBT');
+    expect(mod.CIR_SEVERE_ADVISORY).toContain('Tolin');
+  });
+
+  test('shopping picks include brand/price metadata when set', async () => {
+    const mod = await import('@/services/methodologies/default');
+    const items = Array.from({ length: 10 }, (_, i) => it_(`c${i}`, 'clothing', 1));
+    const picks = runShoppingPicks(mod.DEFAULT_METHODOLOGY, items, []);
+    const skubb = picks.find((p) => p.sku === 'SKUBB');
+    expect(skubb).toBeDefined();
+    expect(skubb?.brand).toBe('IKEA');
+    expect(skubb?.priceTwdMin).toBe(599);
   });
 });

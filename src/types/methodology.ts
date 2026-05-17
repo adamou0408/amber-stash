@@ -106,6 +106,15 @@ export type ShoppingRule = {
   pick: {
     nameTemplate: string;
     reasonTemplate: string;
+    /** 品牌標籤（IKEA / MUJI / NITORI / DAISO / Brother / 3M / 樂扣 / 天馬 / IRIS / HOLA…）*/
+    brand?: string;
+    /** 商品 SKU 或型號（例：SKUBB、PT-P300BT、N-INBOX）給使用者搜尋用 */
+    sku?: string;
+    /** 售價範圍（NT$）— 列出採購預算 */
+    priceTwdMin?: number;
+    priceTwdMax?: number;
+    /** 商品連結（可選） — 給點開查更多用 */
+    referenceUrl?: string;
   };
 };
 

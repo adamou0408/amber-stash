@@ -2,7 +2,7 @@ import type { Item, Space, Suggestion } from '@/types';
 import type { Detection, SpaceSnapshot } from '@/types/snapshot';
 import { DEFAULT_METHODOLOGY } from './methodologies/default';
 import { getMethodology } from './methodologies';
-import { runMethodology, runShoppingPicks } from './methodologyEngine';
+import { runMethodology, runShoppingPicks, type ShoppingPick } from './methodologyEngine';
 
 /**
  * 把一筆 Detection 轉成「臨時 Item」餵給既有的方法論引擎。
@@ -81,7 +81,7 @@ export function generateShoppingPicks(
   spaces: Space[],
   methodologyId?: string,
   latestSnapshotBySpace: Record<string, SpaceSnapshot | null> = {},
-): { name: string; reason: string }[] {
+): ShoppingPick[] {
   const methodology = (methodologyId && getMethodology(methodologyId)) || DEFAULT_METHODOLOGY;
   const effective = resolveItemsForEngine(items, spaces, latestSnapshotBySpace);
   return runShoppingPicks(methodology, effective, spaces);

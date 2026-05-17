@@ -213,6 +213,14 @@ export type Space = {
    * 超過 80% 觸發警示。未填代表此空間不參與容量檢查。
    */
   capacityEstimate?: number;
+  /**
+   * 空間限制條件 — 影響可推薦的收納手法：
+   *  - 'rental':  租屋（不能釘牆、需用 3M 無痕 / 伸縮桿）
+   *  - 'micro':   小坪數（需垂直空間 / 多功能家具）
+   *  - 'elder':   銀髮使用者（取物高度 = 肚臍至肩，不是腰至眼）
+   *  - 'kids':    兒童共用（高度低、防傾倒）
+   */
+  constraints?: ('rental' | 'micro' | 'elder' | 'kids')[];
   note?: string;
   createdAt: number;
 };

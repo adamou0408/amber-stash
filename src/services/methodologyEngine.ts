@@ -238,16 +238,31 @@ export function runMethodology(
   }));
 }
 
+export type ShoppingPick = {
+  name: string;
+  reason: string;
+  brand?: string;
+  sku?: string;
+  priceTwdMin?: number;
+  priceTwdMax?: number;
+  referenceUrl?: string;
+};
+
 export function runShoppingPicks(
   methodology: Methodology,
   items: Item[],
   spaces: Space[],
-): { name: string; reason: string }[] {
+): ShoppingPick[] {
   const ctx = buildContext(items, spaces);
   return methodology.shoppingRules
     .filter((r) => evaluate(r.appliesWhen, ctx))
     .map((r) => ({
       name: fillTemplate(r.pick.nameTemplate, ctx),
       reason: fillTemplate(r.pick.reasonTemplate, ctx),
+      brand: r.pick.brand,
+      sku: r.pick.sku,
+      priceTwdMin: r.pick.priceTwdMin,
+      priceTwdMax: r.pick.priceTwdMax,
+      referenceUrl: r.pick.referenceUrl,
     }));
 }
