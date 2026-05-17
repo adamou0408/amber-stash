@@ -1,4 +1,4 @@
-import type { ItemCategory } from './index';
+import type { ItemCategory, UseFrequency } from './index';
 
 /**
  * 一個 bounding box（畫面內歸一化座標 0~1，或像素皆可，呼叫方需自洽）。
@@ -40,6 +40,10 @@ export type Detection = {
   photoUri?: string;
   /** 使用者備註 */
   note?: string;
+  /** 收納師原則 1/5/8：使用頻率（不填代表尚未分類） */
+  useFrequency?: UseFrequency;
+  /** 收納師原則 5：是否在黃金區 */
+  inGoldenZone?: boolean;
 };
 
 /**

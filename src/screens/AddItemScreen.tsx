@@ -17,9 +17,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@/components/Button';
 import { colors } from '@/theme/colors';
-import { CATEGORY_LABEL, SPACE_EMOJI, type ItemCategory, type Space } from '@/types';
+import {
+  CATEGORY_LABEL,
+  FREQUENCY_EMOJI,
+  FREQUENCY_LABEL,
+  SPACE_EMOJI,
+  type ItemCategory,
+  type Space,
+  type UseFrequency,
+} from '@/types';
 import type { Detection } from '@/types/snapshot';
-import { addItem } from '@/storage/itemsStorage';
+import { addItem, loadItems } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
 import {
   addDetectionToSession,
@@ -36,6 +44,7 @@ import type { ItemsStackParamList } from '@/navigation/types';
 type Props = NativeStackScreenProps<ItemsStackParamList, 'AddItem'>;
 
 const CATEGORIES = Object.keys(CATEGORY_LABEL) as ItemCategory[];
+const FREQUENCIES = Object.keys(FREQUENCY_LABEL) as UseFrequency[];
 
 type Mode = 'capture' | 'review';
 
@@ -50,6 +59,9 @@ export function AddItemScreen({ navigation }: Props) {
   const [photoUri, setPhotoUri] = useState<string | undefined>();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [spaceId, setSpaceId] = useState<string | undefined>();
+  // 收納師原則 1/5/8 — 使用頻率與黃金區
+  const [useFrequency, setUseFrequency] = useState<UseFrequency | undefined>();
+  const [inGoldenZone, setInGoldenZone] = useState<boolean>(false);
 
   // ---------- session state ----------
   const [mode, setMode] = useState<Mode>('capture');
@@ -150,6 +162,8 @@ export function AddItemScreen({ navigation }: Props) {
     setNote('');
     setPhotoUri(undefined);
     setPhotoBase64(undefined);
+    setUseFrequency(undefined);
+    setInGoldenZone(false);
   }
 
   /**
@@ -175,6 +189,8 @@ export function AddItemScreen({ navigation }: Props) {
       sourceType: 'manual',
       photoUri,
       note: note.trim() || undefined,
+      useFrequency,
+      inGoldenZone,
     };
     setPendings((p) => [pending, ...p]);
     resetCurrentInputs();
@@ -201,6 +217,8 @@ export function AddItemScreen({ navigation }: Props) {
       photoUri,
       note: note.trim() || undefined,
       spaceId,
+      useFrequency,
+      inGoldenZone,
     });
     navigation.goBack();
   }
@@ -217,6 +235,26 @@ export function AddItemScreen({ navigation }: Props) {
    * Commit：把 pending detections 寫成這個空間的新 snapshot。
    * 同時寫一份 Item 維持 M2/M3 向後相容。
    */
+  /**
+   * 收納師原則 8：一進一出。
+   * commit 前若有「新類別件數比上次多」，提示使用者本次新增了多少。
+   * 純教育性 banner，不阻擋 commit。
+   */
+  function summarizeDeltas(): { category: string; delta: number; label: string }[] {
+    if (!spaceId) return [];
+    const newCounts = new Map<string, number>();
+    for (const p of pendings) {
+      newCounts.set(p.category, (newCounts.get(p.category) ?? 0) + p.quantity);
+    }
+    return Array.from(newCounts.entries())
+      .map(([cat, count]) => ({
+        category: cat,
+        delta: count,
+        label: CATEGORY_LABEL[cat as ItemCategory] ?? cat,
+      }))
+      .sort((a, b) => b.delta - a.delta);
+  }
+
   async function onCommit() {
     if (!spaceId || pendings.length === 0) return;
 
@@ -258,6 +296,8 @@ export function AddItemScreen({ navigation }: Props) {
         photoUri: p.photoUri,
         note: p.note,
         spaceId,
+        useFrequency: p.useFrequency,
+        inGoldenZone: p.inGoldenZone,
       });
     }
 
@@ -282,6 +322,7 @@ export function AddItemScreen({ navigation }: Props) {
   }
 
   if (mode === 'review') {
+    const deltas = summarizeDeltas();
     return (
       <SafeAreaView edges={['bottom']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
@@ -289,11 +330,24 @@ export function AddItemScreen({ navigation }: Props) {
           <Text style={styles.reviewBody}>
             這份 snapshot 會{selectedSpace ? `寫到「${selectedSpace.name}」` : ''}，取代該空間的當前狀態（不累加）。確認無誤後送出。
           </Text>
+
+          {/* 收納師原則 8：一進一出提示 */}
+          {deltas.length > 0 && (
+            <View style={styles.tipBanner}>
+              <Text style={styles.tipBannerTitle}>💡 一進一出原則</Text>
+              <Text style={styles.tipBannerBody}>
+                本次新增{deltas.map((d) => `${d.label} ${d.delta} 件`).join('、')}。趁機問自己：每多一件進來，有沒有可以淘汰的舊物？這是維持收納成果的關鍵。
+              </Text>
+            </View>
+          )}
+
           {pendings.map((p) => (
             <View key={p.id} style={styles.pendingCard}>
               <Text style={styles.pendingName}>{p.name}</Text>
               <Text style={styles.pendingMeta}>
                 {CATEGORY_LABEL[p.category]} · 數量 {p.quantity}
+                {p.useFrequency ? ` · ${FREQUENCY_EMOJI[p.useFrequency]} ${FREQUENCY_LABEL[p.useFrequency]}` : ''}
+                {p.inGoldenZone ? ' · 黃金區' : ''}
               </Text>
               {p.note ? <Text style={styles.pendingNote}>{p.note}</Text> : null}
             </View>
@@ -307,9 +361,20 @@ export function AddItemScreen({ navigation }: Props) {
     );
   }
 
+  // 收納師原則 2：「全部拿出來才看得見真相」 — session 開始時提醒先清空
+  const showEmptyFirstHint = spaceId && pendings.length === 0;
+
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {showEmptyFirstHint && selectedSpace && (
+          <View style={styles.tipBanner}>
+            <Text style={styles.tipBannerTitle}>📦 開始前的提醒</Text>
+            <Text style={styles.tipBannerBody}>
+              收納師原則：先把「{selectedSpace.name}」裡的東西全部拿出來再開始拍照／登錄。看見總量才能做篩選決定，不全部取出，你不會知道自己有 30 支筆、15 件黑 T。
+            </Text>
+          </View>
+        )}
         <View style={styles.photoBox}>
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} />
@@ -405,6 +470,35 @@ export function AddItemScreen({ navigation }: Props) {
           value={quantity}
           onChangeText={setQuantity}
         />
+
+        <Text style={styles.label}>使用頻率（決定該放黃金區還是深處）</Text>
+        <View style={styles.chips}>
+          {FREQUENCIES.map((f) => {
+            const active = useFrequency === f;
+            return (
+              <Pressable
+                key={f}
+                onPress={() => setUseFrequency(active ? undefined : f)}
+                style={[styles.chip, active && styles.chipActive]}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                  {FREQUENCY_EMOJI[f]} {FREQUENCY_LABEL[f]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {(useFrequency === 'daily' || useFrequency === 'weekly') && (
+          <Pressable
+            onPress={() => setInGoldenZone((v) => !v)}
+            style={[styles.zoneToggle, inGoldenZone && styles.zoneToggleOn]}
+          >
+            <Text style={[styles.zoneToggleText, inGoldenZone && styles.zoneToggleTextOn]}>
+              {inGoldenZone ? '✓ 放在黃金區（腰至眼睛高度）' : '○ 放在黃金區嗎？（腰至眼睛高度最易取）'}
+            </Text>
+          </Pressable>
+        )}
 
         <Text style={styles.label}>備註</Text>
         <TextInput
@@ -545,4 +639,29 @@ const styles = StyleSheet.create({
   aiBtnDisabled: { opacity: 0.6 },
   aiBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   aiHint: { fontSize: 12, color: colors.textMuted, marginTop: 8, lineHeight: 18 },
+  tipBanner: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    padding: 12,
+    marginBottom: 12,
+  },
+  tipBannerTitle: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 4 },
+  tipBannerBody: { fontSize: 12, color: colors.text, lineHeight: 18 },
+  zoneToggle: {
+    marginTop: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  zoneToggleOn: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  zoneToggleText: { fontSize: 13, color: colors.text },
+  zoneToggleTextOn: { color: '#fff', fontWeight: '600' },
 });

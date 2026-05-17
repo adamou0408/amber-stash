@@ -56,7 +56,7 @@
 
 ## 現況 Snapshot
 
-> 隨每次 ship 更新；最後同步：2026-05-17（HEAD `6f38c5c`，v4 收斂目標）
+> 隨每次 ship 更新；最後同步：2026-05-17（v4 收斂目標 + M5.5 第一輪「收納師原則」實作完成）
 > 規則：完成項目要打 `[x]`、延後項目維持 `[ ]` 並標 `(deferred → M?)`
 
 ### ✅ 已 ship
@@ -75,6 +75,14 @@
 - [x] M5 AddItem「🤖 AI 辨識」按鈕串接 session pendings
 - [x] M5 配額管理 + QuotaExceededError + 月份 rollover
 - [x] M5 AI service 單元測試（+13 tests，共 52 tests）
+- [x] **M5.5-T1 收納師 8 原則第一輪實作**（v4，63 tests）
+  - 資料模型：`Item.useFrequency` / `Item.inGoldenZone` / `Space.capacityEstimate`
+  - RuleCondition 新增 4 類：`frequencyCount` / `overcapacity` / `zoneMismatch` / `unfrequented`
+  - default.ts 加 5 條規則：`capacity-80-warning` / `zone-mismatch-daily` / `daily-zone-good` / `unfrequented-many` / `rarely-many`
+  - AddItem：頻率 picker（4 級）+ 黃金區 toggle + 「先清空」hint + 「一進一出」review banner
+  - SpacesScreen：容量欄位 + quick presets + 行內填充率顯示（80% 警示變色）
+  - ItemsScreen：頻率 pill + 黃金區 pill + 點一下快速設定頻率
+  - 對應原則：1（部分）/ 2 UX / 5 / 6 / 8（教育性）/ 7 已 ship
 - [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
 
 ### ⚠️ 架構做了但 UX/功能未完整（M5.5 補完）
@@ -90,6 +98,11 @@
 
 - [ ] **M5.5 錄入摩擦 ≤ 10 秒**：AddItem flow 全面計時、優化 tap path
 - [ ] **M5.5 真機驗證**：iOS / Android 至少各 1 台跑 smoke test
+- [ ] **M5.5-T2 收納師原則第二輪**（依 M6 煙霧測試結果決定是否啟動）：
+  - 原則 1 完整版：`Item.usePointOfUseSpaceId`（使用點 ≠ 收納點 → 動線錯位警示）
+  - 原則 3 完整版：「5 問 review mode」獨立 screen，逐物品走 5 題輸出淘汰候選
+  - 原則 4：`Item.subcategory` + ItemsScreen 一次一類過濾
+  - 原則 8 強化版：把目前的教育性 banner 升級為可互動的「淘汰選擇器」
 - [ ] **M6 使用者煙霧測試**：找 5-10 位非團隊成員，連用 2 週並蒐集卡關點
 - [ ] M0.5 App Icon / Splash / Adaptive Icon PNG（目前用 Expo 預設）
 - [ ] M0.5 GitHub Actions CI（push / PR 自動跑 tsc + test + web bundle）
@@ -319,12 +332,42 @@
 
 ---
 
+## 收納師 8 原則對應表
+
+> 收納師整理邏輯的 8 條原則 → app 落地對應。
+> v4 M5.5-T1 已 ship 第一輪實作（5/8 完整、2/8 部分、1/8 不做）。
+
+| # | 原則 | 第一性原理 | App 落地（已 ship） | 後續迭代 |
+|---|---|---|---|---|
+| 1 | 以人為中心（動線） | 物品該放哪是人的函數 | `Item.useFrequency` ✅ | M5.5-T2：`usePointOfUseSpaceId` |
+| 2 | 全部拿出來 | 局部盤點 = 假信心 | session 入口 hint「先清空」✅ | — |
+| 3 | 5 個篩選提問 | 無結構化 prompt = 預設保留 | rule `rarely-many` 文字內列出 5 題 🟡 | M5.5-T2：review mode screen |
+| 4 | 分層分類 | 工作記憶 ~7 件 | — | M5.5-T2：`Item.subcategory` + 過濾 |
+| 5 | 黃金區法則 | 物理省力 = 頻率 × 取物成本 | `Item.inGoldenZone` + 4 條規則 ✅ | — |
+| 6 | 80% 留白原則 | 100% 滿 = 沒緩衝 | `Space.capacityEstimate` + 警示 ✅ | — |
+| 7 | 可視化 / 標籤化 | 看不見 = 不存在 | 標籤列印 + 透明箱建議 ✅ | — |
+| 8 | 一進一出 | 流入 > 流出 = 熵增 | commit review banner（教育性）🟡 | M5.5-T2：互動式淘汰選擇器 |
+
+### 第一性原理推導出的共用底層欄位
+
+兩個欄位解鎖 5 條原則：
+
+- **`Item.useFrequency`**（daily / weekly / monthly / rarely）→ 解鎖 1 / 5 / 8
+- **`Space.capacityEstimate`**（粗估件數）→ 解鎖 5 / 6
+
+這兩個欄位是「第一性思考」的結論 — 不要為每條原則做獨立資料模型，找出共用 primitive，一處變更全面解鎖。
+
+---
+
 ## M5.5 · 體驗精煉（v4 next up）
 
 ### 目標
 把 M4 / M5 已有架構但 UX 沒做完的部分補完，**並把錄入摩擦壓到 ≤ 10 秒**。讓 app 達到「我願意每天打開」的水準。
 
 ### 範圍
+
+**T1（已 ship）— 收納師 8 原則第一輪落地**
+見上方「收納師 8 原則對應表」。
 
 **M4/M5 延後 UX 補完**
 - 容器歧義 UI（辨識到收納盒時詢問展開／不展開）
@@ -335,6 +378,7 @@
 **錄入摩擦優化**
 - AddItem flow 全面計時：拍照、輸入、儲存各環節秒數
 - 砍掉非必要欄位 / tap、預填合理預設值
+- 頻率 picker 預設值（依分類給一個合理預設）
 - 「再來一個」快速連續錄入模式
 
 **真機驗證**

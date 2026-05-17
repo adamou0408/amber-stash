@@ -144,6 +144,73 @@ export const DEFAULT_METHODOLOGY: Methodology = {
           '建議從最常用、最亂的一個抽屜或櫃子開始拍照建檔。完成第一個小區域，再擴張到整個房間。',
       },
     },
+    // === 收納師原則衍生規則（v4 加入）===
+    {
+      id: 'capacity-80-warning',
+      description: '原則 6：留白與 80% 原則 — 超過 80% 滿就會塞不下、容易亂回去',
+      appliesWhen: { type: 'overcapacity', ratio: 0.8 },
+      priority: 95,
+      suggestion: {
+        titleTemplate: '⚠️ {crowdedSpace} 已 {crowdedRatio} 滿',
+        bodyTemplate:
+          '收納師的「80% 原則」：超過八成滿就該開始減量，不然新東西進來就會亂。建議從 rarely 標籤的物品先淘汰一輪，留 20% 給未來的東西。',
+        tags: ['principle-6', 'capacity'],
+      },
+    },
+    {
+      id: 'zone-mismatch-daily',
+      description: '原則 5：黃金區法則 — 每天用的應該放黃金區（腰到眼睛）',
+      appliesWhen: { type: 'zoneMismatch', frequency: 'daily', op: '>=', value: 3 },
+      priority: 92,
+      suggestion: {
+        titleTemplate: '🔥 {dailyMismatch} 件每天用的物品不在黃金區',
+        bodyTemplate:
+          '把每天會用的物品移到「腰到眼睛」高度，省下每天的反覆彎腰／墊腳。可以跟黃金區裡很少用的東西（rarely 標籤）對調 — 高頻物品搶黃金區是省力最大杠桿。',
+        tags: ['principle-5', 'golden-zone'],
+      },
+    },
+    {
+      id: 'daily-zone-good',
+      description: '原則 5 正向回饋：daily 物品全在黃金區',
+      appliesWhen: {
+        type: 'and',
+        conditions: [
+          { type: 'frequencyCount', frequency: 'daily', op: '>=', value: 3 },
+          { type: 'zoneMismatch', frequency: 'daily', op: '==', value: 0 },
+        ],
+      },
+      priority: 20,
+      suggestion: {
+        titleTemplate: '✓ 高頻物品收納合理',
+        bodyTemplate:
+          '你有 {daily} 件每天用的物品，全部都在黃金區。這是收納師講「省力最大杠桿」的狀態 — 維持下去。',
+        tags: ['principle-5', 'positive'],
+      },
+    },
+    {
+      id: 'unfrequented-many',
+      description: '原則 1/5：超過 5 件物品沒設使用頻率，引導補填以啟用其他規則',
+      appliesWhen: { type: 'unfrequented', op: '>=', value: 5 },
+      priority: 60,
+      suggestion: {
+        titleTemplate: '有 {unfrequented} 件物品還沒設使用頻率',
+        bodyTemplate:
+          '收納師問的第一題：「你過去一年用過嗎？」幫每件物品標個頻率（每天 / 每週 / 每月 / 很少），app 才能告訴你哪些該放黃金區、哪些該淘汰。長按物品列表的物品可以快速設定。',
+        tags: ['principle-1', 'principle-5', 'onboarding'],
+      },
+    },
+    {
+      id: 'rarely-many',
+      description: '原則 3：篩選 — rarely 物品多代表該重新評估保留',
+      appliesWhen: { type: 'frequencyCount', frequency: 'rarely', op: '>=', value: 8 },
+      priority: 65,
+      suggestion: {
+        titleTemplate: '❄️ {rarely} 件很少用的物品',
+        bodyTemplate:
+          '對每件 rarely 物品問五題：① 過去一年用過嗎？② 現在的你還需要嗎？③ 壞了/過期了嗎？④ 拿起來有開心的感覺嗎？⑤ 現在去店裡會買它嗎？答案多數是「不」就是淘汰候選。',
+        tags: ['principle-3', 'declutter'],
+      },
+    },
   ],
   shoppingRules: [
     {

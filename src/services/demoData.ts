@@ -23,6 +23,7 @@ export async function loadDemoData(): Promise<{
       widthCm: 180,
       heightCm: 220,
       depthCm: 60,
+      capacityEstimate: 25,
       createdAt: now,
     },
     {
@@ -32,6 +33,7 @@ export async function loadDemoData(): Promise<{
       widthCm: 60,
       heightCm: 20,
       depthCm: 45,
+      capacityEstimate: 12,
       createdAt: now - 1000,
     },
     {
@@ -41,6 +43,7 @@ export async function loadDemoData(): Promise<{
       widthCm: 140,
       heightCm: 75,
       depthCm: 70,
+      capacityEstimate: 20,
       createdAt: now - 2000,
     },
     {
@@ -50,6 +53,7 @@ export async function loadDemoData(): Promise<{
       widthCm: 80,
       heightCm: 180,
       depthCm: 30,
+      capacityEstimate: 30,
       createdAt: now - 3000,
     },
     {
@@ -59,25 +63,27 @@ export async function loadDemoData(): Promise<{
       widthCm: 120,
       heightCm: 220,
       depthCm: 80,
+      capacityEstimate: 20,
       createdAt: now - 4000,
     },
   ];
 
+  // demo 資料故意混合：有些設好 frequency + golden zone，有些沒設 — 用來展示規則差異
   const items: Item[] = [
-    mk('冬季羽絨外套', 'clothing', 3, wardrobeId, now),
-    mk('針織毛衣', 'clothing', 8, wardrobeId, now - 1000),
-    mk('長袖襯衫', 'clothing', 12, wardrobeId, now - 2000),
-    mk('行動電源', 'electronics', 2, drawerId, now - 3000),
-    mk('USB-C 線', 'electronics', 5, drawerId, now - 4000),
-    mk('家用鑰匙', 'tools', 3, drawerId, now - 5000),
-    mk('筆記型電腦', 'electronics', 1, deskId, now - 6000),
-    mk('A4 筆記本', 'books', 4, deskId, now - 7000),
-    mk('原子筆', 'books', 12, deskId, now - 8000),
-    mk('技術書籍', 'books', 18, shelfId, now - 9000),
-    mk('相框', 'sentimental', 6, shelfId, now - 10000),
-    mk('露營帳篷', 'tools', 1, storageRoomId, now - 11000),
-    mk('登山背包', 'tools', 2, storageRoomId, now - 12000),
-    mk('行李箱', 'tools', 3, storageRoomId, now - 13000),
+    mk('冬季羽絨外套', 'clothing', 3, wardrobeId, now, 'monthly', false),
+    mk('針織毛衣', 'clothing', 8, wardrobeId, now - 1000, 'weekly', true),
+    mk('長袖襯衫', 'clothing', 12, wardrobeId, now - 2000, 'weekly', true),
+    mk('行動電源', 'electronics', 2, drawerId, now - 3000, 'daily', true),
+    mk('USB-C 線', 'electronics', 5, drawerId, now - 4000, 'daily', true),
+    mk('家用鑰匙', 'tools', 3, drawerId, now - 5000, 'daily', true),
+    mk('筆記型電腦', 'electronics', 1, deskId, now - 6000, 'daily', true),
+    mk('A4 筆記本', 'books', 4, deskId, now - 7000, 'weekly'),
+    mk('原子筆', 'books', 12, deskId, now - 8000, 'daily', false),
+    mk('技術書籍', 'books', 18, shelfId, now - 9000, 'monthly'),
+    mk('相框', 'sentimental', 6, shelfId, now - 10000, 'rarely'),
+    mk('露營帳篷', 'tools', 1, storageRoomId, now - 11000, 'rarely'),
+    mk('登山背包', 'tools', 2, storageRoomId, now - 12000, 'rarely'),
+    mk('行李箱', 'tools', 3, storageRoomId, now - 13000, 'rarely'),
   ];
 
   const shopping: ShoppingItem[] = [
@@ -127,6 +133,8 @@ function mk(
   quantity: number,
   spaceId: string,
   createdAt: number,
+  useFrequency?: Item['useFrequency'],
+  inGoldenZone?: boolean,
 ): Item {
   return {
     id: String(uuid.v4()),
@@ -134,6 +142,8 @@ function mk(
     category,
     quantity,
     spaceId,
+    useFrequency,
+    inGoldenZone,
     createdAt,
     updatedAt: createdAt,
   };

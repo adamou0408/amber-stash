@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -13,8 +14,16 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { colors } from '@/theme/colors';
-import { CATEGORY_LABEL, SPACE_EMOJI, type Item, type Space } from '@/types';
-import { deleteItem, loadItems } from '@/storage/itemsStorage';
+import {
+  CATEGORY_LABEL,
+  FREQUENCY_EMOJI,
+  FREQUENCY_LABEL,
+  SPACE_EMOJI,
+  type Item,
+  type Space,
+  type UseFrequency,
+} from '@/types';
+import { deleteItem, loadItems, updateItem } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
 import { loadDemoData } from '@/services/demoData';
 import type { ItemsStackParamList } from '@/navigation/types';
@@ -54,6 +63,48 @@ export function ItemsScreen({ navigation }: Props) {
     await refresh();
   }
 
+  function onTapItem(item: Item) {
+    // 收納師原則 1/5/8 — 點一下快速設定使用頻率與黃金區
+    const cur = item.useFrequency;
+    const options: { label: string; freq?: UseFrequency }[] = [
+      { label: '🔥 每天用', freq: 'daily' },
+      { label: '⭐ 每週用', freq: 'weekly' },
+      { label: '🌙 每月用', freq: 'monthly' },
+      { label: '❄️ 很少用', freq: 'rarely' },
+      { label: '清除頻率', freq: undefined },
+    ];
+    Alert.alert(
+      `${item.name}`,
+      cur ? `目前頻率：${FREQUENCY_EMOJI[cur]} ${FREQUENCY_LABEL[cur]}` : '尚未設定使用頻率',
+      [
+        ...options.map((o) => ({
+          text: o.label,
+          onPress: async () => {
+            await updateItem(item.id, { useFrequency: o.freq });
+            await refresh();
+            if (o.freq === 'daily' || o.freq === 'weekly') {
+              Alert.alert(
+                '黃金區',
+                '這件物品要放在「腰至眼睛」高度的黃金區嗎？',
+                [
+                  { text: '不要', onPress: async () => {
+                    await updateItem(item.id, { inGoldenZone: false });
+                    await refresh();
+                  } },
+                  { text: '是的', onPress: async () => {
+                    await updateItem(item.id, { inGoldenZone: true });
+                    await refresh();
+                  } },
+                ],
+              );
+            }
+          },
+        })),
+        { text: '取消', style: 'cancel' },
+      ],
+    );
+  }
+
   if (items === null) {
     return (
       <View style={styles.center}>
@@ -82,9 +133,11 @@ export function ItemsScreen({ navigation }: Props) {
         }
         renderItem={({ item }) => {
           const space = item.spaceId ? spaceById.get(item.spaceId) : undefined;
+          const freq = item.useFrequency;
           return (
             <Pressable
               style={styles.row}
+              onPress={() => onTapItem(item)}
               onLongPress={async () => {
                 await deleteItem(item.id);
                 setItems((prev) => prev?.filter((it) => it.id !== item.id) ?? null);
@@ -102,13 +155,31 @@ export function ItemsScreen({ navigation }: Props) {
                 <Text style={styles.rowMeta}>
                   {CATEGORY_LABEL[item.category]} · 數量 {item.quantity}
                 </Text>
-                {space ? (
-                  <View style={styles.spacePill}>
-                    <Text style={styles.spacePillText}>
-                      {SPACE_EMOJI[space.kind]} {space.name}
-                    </Text>
-                  </View>
-                ) : null}
+                <View style={styles.pillRow}>
+                  {space ? (
+                    <View style={styles.spacePill}>
+                      <Text style={styles.spacePillText}>
+                        {SPACE_EMOJI[space.kind]} {space.name}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {freq ? (
+                    <View style={styles.spacePill}>
+                      <Text style={styles.spacePillText}>
+                        {FREQUENCY_EMOJI[freq]} {FREQUENCY_LABEL[freq]}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={[styles.spacePill, styles.pillWarn]}>
+                      <Text style={styles.pillWarnText}>未設頻率</Text>
+                    </View>
+                  )}
+                  {item.inGoldenZone ? (
+                    <View style={[styles.spacePill, styles.pillGold]}>
+                      <Text style={styles.pillGoldText}>✨ 黃金區</Text>
+                    </View>
+                  ) : null}
+                </View>
               </View>
             </Pressable>
           );
@@ -153,9 +224,8 @@ const styles = StyleSheet.create({
   rowBody: { flex: 1 },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
   rowMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   spacePill: {
-    alignSelf: 'flex-start',
-    marginTop: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
@@ -164,5 +234,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   spacePillText: { fontSize: 11, color: colors.text },
+  pillWarn: { backgroundColor: '#fff4e1', borderColor: '#e6a850' },
+  pillWarnText: { fontSize: 11, color: '#a76912' },
+  pillGold: { backgroundColor: '#fff9d9', borderColor: '#d4a317' },
+  pillGoldText: { fontSize: 11, color: '#7a5d05', fontWeight: '600' },
   footer: { padding: 16, paddingBottom: 24 },
 });

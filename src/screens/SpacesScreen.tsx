@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,30 +13,46 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { colors } from '@/theme/colors';
-import { SPACE_LABEL, type Space, type SpaceKind } from '@/types';
+import { SPACE_LABEL, type Item, type Space, type SpaceKind } from '@/types';
 import { addSpace, deleteSpace, loadSpaces } from '@/storage/spacesStorage';
+import { loadItems } from '@/storage/itemsStorage';
 
 const KINDS = Object.keys(SPACE_LABEL) as SpaceKind[];
 
 export function SpacesScreen() {
   const [spaces, setSpaces] = useState<Space[] | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
   const [name, setName] = useState('');
   const [kind, setKind] = useState<SpaceKind>('wardrobe');
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
   const [depth, setDepth] = useState('');
+  // 收納師原則 6：80% 留白原則，需要使用者粗估容量
+  const [capacity, setCapacity] = useState('');
 
   useFocusEffect(
     useCallback(() => {
       let alive = true;
-      loadSpaces().then((s) => {
-        if (alive) setSpaces(s);
+      Promise.all([loadSpaces(), loadItems()]).then(([s, its]) => {
+        if (!alive) return;
+        setSpaces(s);
+        setItems(its);
       });
       return () => {
         alive = false;
       };
     }, []),
   );
+
+  const itemCountBySpace = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const it of items) {
+      if (it.spaceId) {
+        map[it.spaceId] = (map[it.spaceId] ?? 0) + it.quantity;
+      }
+    }
+    return map;
+  }, [items]);
 
   async function onAdd() {
     if (!name.trim()) {
@@ -49,12 +65,18 @@ export function SpacesScreen() {
       widthCm: parseNumber(width),
       heightCm: parseNumber(height),
       depthCm: parseNumber(depth),
+      capacityEstimate: parseNumber(capacity),
     });
     setSpaces((prev) => (prev ? [space, ...prev] : [space]));
     setName('');
     setWidth('');
     setHeight('');
     setDepth('');
+    setCapacity('');
+  }
+
+  function setCapacityPreset(n: number) {
+    setCapacity(String(n));
   }
 
   if (spaces === null) {
@@ -122,6 +144,21 @@ export function SpacesScreen() {
                 onChangeText={setDepth}
               />
             </View>
+            <Text style={styles.label}>容量估算（件數，啟用「80% 留白原則」警示）</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="此空間舒適能容納幾件物品？"
+              keyboardType="number-pad"
+              value={capacity}
+              onChangeText={setCapacity}
+            />
+            <View style={[styles.chips, { marginTop: 8 }]}>
+              {[5, 12, 20, 30, 50].map((n) => (
+                <Pressable key={n} onPress={() => setCapacityPreset(n)} style={styles.chip}>
+                  <Text style={styles.chipText}>{n} 件</Text>
+                </Pressable>
+              ))}
+            </View>
             <Button title="新增" onPress={onAdd} style={{ marginTop: 12 }} />
           </View>
         }
@@ -130,25 +167,47 @@ export function SpacesScreen() {
             <Text style={styles.emptyText}>還沒有空間。先建一個衣櫃或抽屜試試。</Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.row}
-            onLongPress={async () => {
-              await deleteSpace(item.id);
-              setSpaces((prev) => prev?.filter((s) => s.id !== item.id) ?? null);
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowTitle}>{item.name}</Text>
-              <Text style={styles.rowMeta}>
-                {SPACE_LABEL[item.kind]}
-                {item.widthCm && item.heightCm && item.depthCm
-                  ? ` · ${item.widthCm}×${item.heightCm}×${item.depthCm} cm`
-                  : ''}
-              </Text>
-            </View>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const count = itemCountBySpace[item.id] ?? 0;
+          const capacity = item.capacityEstimate;
+          const ratio = capacity ? count / capacity : undefined;
+          const ratioColor =
+            ratio === undefined
+              ? colors.textMuted
+              : ratio > 1
+                ? '#c0392b'
+                : ratio > 0.8
+                  ? '#e67e22'
+                  : '#27ae60';
+          return (
+            <Pressable
+              style={styles.row}
+              onLongPress={async () => {
+                await deleteSpace(item.id);
+                setSpaces((prev) => prev?.filter((s) => s.id !== item.id) ?? null);
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowTitle}>{item.name}</Text>
+                <Text style={styles.rowMeta}>
+                  {SPACE_LABEL[item.kind]}
+                  {item.widthCm && item.heightCm && item.depthCm
+                    ? ` · ${item.widthCm}×${item.heightCm}×${item.depthCm} cm`
+                    : ''}
+                </Text>
+                {capacity ? (
+                  <Text style={[styles.rowFill, { color: ratioColor }]}>
+                    {count} / {capacity} 件 ·{' '}
+                    {ratio !== undefined ? `${Math.round(ratio * 100)}%` : '-'}
+                    {ratio !== undefined && ratio > 0.8 ? ' ⚠️ 超過 80%' : ''}
+                  </Text>
+                ) : (
+                  <Text style={styles.rowFillEmpty}>未設容量 · 設定後可看 80% 留白警示</Text>
+                )}
+              </View>
+            </Pressable>
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -209,6 +268,8 @@ const styles = StyleSheet.create({
   },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
   rowMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  rowFill: { fontSize: 12, marginTop: 4, fontWeight: '600' },
+  rowFillEmpty: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
   empty: { alignItems: 'center', paddingVertical: 30 },
   emptyText: { color: colors.textMuted },
 });
