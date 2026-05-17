@@ -1,58 +1,62 @@
 # Amber Stash 開發計劃
 
-> 版本：v3 · 2026-05-15
+> 版本：v4 · 2026-05-17
 > 全書一致：每個里程碑都有「目標 / 範圍 / 驗收標準 / 驗收方法」
 > 北極星：**朋友拿你手機，3 分鐘就能感受 magic moment 不卡關**
+>
+> **v4 變更**：目標收斂為「先做出一個好用的收納 app」。原 v3 的三條變現線（訂閱 / 客製箱 / 方法論授權）整體下架不入目標；相關里程碑（M6 內容變現、M7 客製箱銷售、M8 訂閱金流）改為 **post-product 的選項**，**不再是 v4 主線**。
 
 ---
 
-## 戰略架構（recap）
+## 產品目標（v4）
 
-### 四角飛輪
+**唯一目標：做出一個真的好用的居家收納 app。**
 
-```
-        使用者資料
-            ↕
-收納師方法論  ⇄  AI 推薦
-            ↕
-         客製收納箱
-```
+衡量好用的三件事：
 
-四角缺一不可：少 AI 是 inventory app；少方法論會同質化；少箱子沒實體 SKU；少使用者資料是空殼。
+1. **錄入零摩擦** — 拍照 / 文字輸入登錄一個物品 ≤ 10 秒，使用者不抗拒每天打開。
+2. **建議真的有用** — 建議是「我下一步就可以動手做」，而不是「漂亮話 / 道理」。
+3. **回訪有理由** — 不只是登錄工具；變動家裡狀態時，使用者會想開 app。
 
-### 三條變現線
+任何不直接服務這三件事的功能 / 商業設計，**v4 期間不做**。
 
-| 變現線 | 形式 | 啟動時機 |
-|---|---|---|
-| A · AI 推薦進階訂閱 | 月費 | M5 完成後 |
-| B · 客製收納箱直營 | 一次性購買 | M7 完成後 |
-| C · 收納師方法論授權 / 訂閱 | 月費 / 一次性 | M6 完成後 |
+### 為什麼下架變現線
+
+- 變現線會逼迫做「為了付費而做」的功能（配額、付費 paywall、訂閱金流、合約談判），這些都不會讓 app 變更好用，反而拖節奏。
+- 沒有 product-market fit 前談變現是顛倒因果；先確認有人離不開，再談付錢。
+- 工程資源稀缺，把每一週投在「使用者實際打開時體驗變好」的事情上。
 
 ---
 
-## 里程碑總覽
+## 里程碑總覽（v4）
 
 | # | 名稱 | 主要交付 | 狀態 |
 |---|---|---|---|
 | M1 | 骨架 | Expo 專案 + 5 tab + AsyncStorage CRUD | ✅ ship（commit `618b09b`） |
 | M2 | 可用 MVP | 物品↔空間關聯 + 示範資料 + 標籤列印 | ✅ ship（commit `fc7f9bf` / `7268cec`） |
-| M3 | 方法論引擎 | JSON 規則 + 切換 UI + 2 套示範方法論 | ✅ ship（commit `40cfa41`） |
+| M3 | 方法論引擎 | JSON 規則 + 切換 UI + 2 套示範方法論（**內建免費**） | ✅ ship（commit `40cfa41`） |
 | M4 | Session + Snapshot | 防重複計算的根本架構 | ✅ 架構 ship（commit `4cbd8aa`+`dfaf2fc`+`9984df7`） · ⚠️ UX 部分延後 |
-| M5 | Claude Vision | 拍照辨識 → detection proposal 進 session | ✅ 架構 ship（commit `0ed0f66`） · ⚠️ UX 部分延後 |
-| M6 | 方法論內容啟動 | 邀請 3-5 收納師、授權合約、訂閱金流 | 🔄 進行中 — 材料 ship（commit `07bda99`）/ 真實邀請待你動手 |
-| M7 | 客製收納箱 | 箱規格 / 訂單 / 雷雕字段 / SVG outline | ❌ 未啟動 |
-| M8 | 雲端 + 上架 | Supabase / EAS / 商店 / Landing | ❌ 未啟動 |
-| **M0.5** | 工程衛生 | CI / 真機驗證 / 效能 profiling / App Icon | ❌ 未啟動（橫切，分散在各 milestone） |
+| M5 | Claude Vision | 拍照辨識 → detection proposal 進 session | ✅ 架構 ship（commit `0ed0f66`） · ⚠️ UX 部分延後（無配額限制，內部 dev key 即可） |
+| **M5.5** | **體驗精煉**（**v4 新主線**） | M4/M5 延後 UX 補完 + 錄入摩擦壓到 ≤ 10 秒 + 真機驗證 | ⏳ next up |
+| **M6** | **使用者煙霧測試** | 找 5-10 位非團隊成員實際用 2 週，蒐集卡關點 | ❌ 未啟動 |
+| M0.5 | 工程衛生 | CI / 真機驗證 / 效能 profiling / App Icon | ❌ 未啟動（橫切） |
+| ~~M6 舊~~ | ~~方法論內容變現~~ | ~~邀請收納師 / 授權合約 / 訂閱金流~~ | 🗄️ **v4 下架**（材料保留於 `docs/m6-outreach/`，待 v5 評估） |
+| ~~M7 舊~~ | ~~客製收納箱銷售~~ | ~~箱規格 / 訂單 / 雷雕~~ | 🗄️ **v4 下架** |
+| ~~M8 舊~~ | ~~雲端 + 上架 + 訂閱~~ | ~~Supabase / EAS / 商店 / Landing / 金流~~ | 🗄️ **拆分**：雲端同步 + 上架留作 v4 後選項；訂閱金流整體下架 |
 
-依賴關係：M1 → M2 → M3 → M4 → M5 → M7 → M8；M3 → M6（與 M5 並行）
+依賴關係（v4 主線）：M1 → M2 → M3 → M4 → M5 → **M5.5 → M6 煙霧測試**
 
 詳細「已交付 / 已延後」清單見下方 **〈現況 Snapshot〉** 一節。
+
+> **方法論這條線怎麼辦？**
+> M3 引擎與內建 2 套方法論（`amberstash-default` 免費 + `konmari-zh` 作為示範）**保留並繼續打磨內容品質**，這是讓建議「真的有用」的核心引擎。
+> 邀請外部收納師、簽授權合約、訂閱金流 = **v4 範圍外**。`docs/m6-outreach/` 的材料封存不刪，未來真要做時不用重寫，但**現在不執行**。
 
 ---
 
 ## 現況 Snapshot
 
-> 隨每次 ship 更新；最後同步：2026-05-15（HEAD `61a8138`）
+> 隨每次 ship 更新；最後同步：2026-05-17（HEAD `6f38c5c`，v4 收斂目標）
 > 規則：完成項目要打 `[x]`、延後項目維持 `[ ]` 並標 `(deferred → M?)`
 
 ### ✅ 已 ship
@@ -61,7 +65,7 @@
 - [x] M2 物品↔空間關聯：AddItem 空間 chip、ItemsScreen 空間 pill、demo data 載入
 - [x] M2 標籤列印：5 空間多選 / 3 尺寸 / Noto Sans TC 900 / QR + PDF + 列印
 - [x] M3 方法論引擎：`Methodology` / `Expert` / `DecisionRule` / 規則評估器 + 模板填詞
-- [x] M3 2 套示範方法論：`amberstash-default`（免費）+ `konmari-zh`（NT$79/月 placeholder）
+- [x] M3 2 套示範方法論：`amberstash-default` + `konmari-zh`（v4 下訂閱定價失效，兩者皆作為內建示範方法論）
 - [x] M3 建議頁切換 + attribution 卡 + 偏好持久化
 - [x] M4 Session + Snapshot 資料模型 + storage CRUD + dedup（IOU > 0.5）+ anomaly 偵測
 - [x] M4 AddItem 雙模式：選空間走 session/snapshot、未選 fallback quick-save
@@ -71,43 +75,55 @@
 - [x] M5 AddItem「🤖 AI 辨識」按鈕串接 session pendings
 - [x] M5 配額管理 + QuotaExceededError + 月份 rollover
 - [x] M5 AI service 單元測試（+13 tests，共 52 tests）
-- [x] M6 outreach 材料 5 份：候選名單 / 授權 outline / 邀請信 / 撰寫指南 / 分潤模式
 - [x] 多機開發環境：`.env.example` / `package-lock.json` 納管 / `.gitignore` 修嚴
 
-### ⚠️ 架構做了但 UX/功能未完整
+### ⚠️ 架構做了但 UX/功能未完整（M5.5 補完）
 
 - [ ] M4 容器歧義 UI（辨識到收納盒時詢問展開／不展開） (deferred → M5.5)
 - [ ] M4 低信心強制確認對話（confidence < 0.6 必須點一下） (deferred → M5.5)
 - [ ] M5 Streaming 進度條（vision call 5-10 秒，目前只 spinner） (deferred → M5.5)
 - [ ] M5 Bbox 預覽 / 編輯 UI（資料層備好，UI 沒畫） (deferred → M5.5)
-- [ ] M5 Server-side proxy 實際部署（Cloudflare Worker / Vercel function） (deferred → M5.5)
-- [ ] M5 黃金測試集（10 張人工標註照片做 vision 迴歸） (deferred → M5.5，需要使用者提供照片)
 - [ ] M5 真實 Claude API 端對端驗證（環境沒 key，只跑了 mock + 解析） (deferred → 使用者本機驗)
-- [ ] M6 方法論列表頁 / 作者頁 UI（資料模型完整、UI 沒做） (deferred → M6.5)
-- [ ] M6 訂閱金流（Stripe / IAP） (deferred → M6.5)
+- [ ] M5 黃金測試集（10 張人工標註照片做 vision 迴歸） (deferred → M5.5，需要使用者提供照片)
 
-### ❌ 完全未啟動
+### ❌ v4 主線未啟動
 
-- [ ] M6 真實邀請 3-5 位收納師（材料 ready，需要使用者親自談）
-- [ ] M6 律師 review 授權合約 outline 第 1.3 / 2.2 / 7.3 條
-- [ ] M7 客製收納箱：`types/box.ts` / `services/box.ts` / 訂單流程 / SVG outline 雷雕字
-- [ ] M7 雷雕工廠合作關係（需使用者談）
-- [ ] M8 Supabase Auth + Postgres、Repository 介面換實作
-- [ ] M8 家庭群組 ACL
-- [ ] M8 EAS Build + Submit
-- [ ] M8 App Store / Google Play 上架（需 Apple / Google 開發者帳號）
-- [ ] M8 Landing page（amberstash.com + waitlist）
-- [ ] M8 隱私政策 / 服務條款（需律師）
-- [ ] M8 埋點（PostHog / Mixpanel）
+- [ ] **M5.5 錄入摩擦 ≤ 10 秒**：AddItem flow 全面計時、優化 tap path
+- [ ] **M5.5 真機驗證**：iOS / Android 至少各 1 台跑 smoke test
+- [ ] **M6 使用者煙霧測試**：找 5-10 位非團隊成員，連用 2 週並蒐集卡關點
+- [ ] M0.5 App Icon / Splash / Adaptive Icon PNG（目前用 Expo 預設）
+- [ ] M0.5 GitHub Actions CI（push / PR 自動跑 tsc + test + web bundle）
+- [ ] M0.5 效能 profiling（大量物品 > 500 筆下 FlatList 表現）
+
+### 🗄️ v4 下架（封存，未來再評估）
+
+> 原 v3 三條變現線相關項目，v4 不執行。材料保留於 `docs/m6-outreach/`，code 不刪。
+
+- [~] ~~M6 真實邀請 3-5 位收納師~~ — outreach 材料已 ship，不執行邀請
+- [~] ~~M6 律師 review 授權合約~~ — 無變現需求前不送律師
+- [~] ~~M6 訂閱金流（Stripe / IAP）~~ — 整體下架
+- [~] ~~M6 方法論列表頁 / 作者頁 UI~~ — 內建 2 套方法論期間不需要列表頁
+- [~] ~~M7 客製收納箱（types/box.ts、訂單、SVG outline、雷雕工廠）~~ — 整體下架
+- [~] ~~Server-side proxy 部署~~ — 無對外發佈前不需要（dev 用直連 + mock 即可）
+- [~] ~~配額 / paywall~~ — 整體下架，內部 dev key 跑即可
+- [~] ~~Landing page + waitlist~~ — 無對外發佈前不做
+- [~] ~~埋點（PostHog / Mixpanel）~~ — 內測階段用手動訪談蒐集回饋
+
+### 🟡 v4 後可選（不在主線、但保留討論）
+
+- [ ] 雲端同步（Supabase Auth + Postgres）— 多裝置同步是好用 app 的合理延伸，但等煙霧測試確認真有人在用再做
+- [ ] 家庭群組 ACL — 同上，依煙霧測試需求決定
+- [ ] EAS Build + App Store / Google Play 上架 — 等 M6 煙霧測試結束、產品穩定再走
+- [ ] 隱私政策 / 服務條款 — 上架前一步補
 
 ### 🩺 M0.5 工程衛生（橫切，隨時可補）
 
 - [ ] App Icon / Splash / Adaptive Icon PNG（目前用 Expo 預設）
 - [ ] GitHub Actions CI（push / PR 自動跑 tsc + test + web bundle）
-- [ ] E2E 測試（Detox / Maestro，Plan 原訂 M3.5 後上但未做）
+- [ ] E2E 測試（Detox / Maestro）
 - [ ] 真實 iOS / Android 模擬器跑 smoke test（環境只跑得了 web bundle）
 - [ ] 效能 profiling（大量物品 > 500 筆下 FlatList 表現）
-- [ ] 把 `KONMARI_METHODOLOGY` 的 placeholder 換成真實授權內容（屬 M6）
+- [~] ~~`KONMARI_METHODOLOGY` placeholder 換真實授權~~ — v4 下架；保留為示範方法論
 
 ---
 
@@ -285,111 +301,109 @@
 
 ### 範圍
 - `services/ai/claudeClient.ts`：fetch wrapper + prompt cache headers
-- 環境變數：`expo-constants` + `app.config.ts`，`EXPO_PUBLIC_*` anon key；敏感 key 走 proxy（M5.5 加 proxy）
+- 環境變數：dev key 直連即可，v4 不部署 proxy
 - `services/ai/recognizeItems.ts`：base64 上傳 → 結構化回傳 `Detection[]`
 - AddItem 加「AI 識別」按鈕，把結果灌進 session
-- 免費配額（每月 N 次，超過導訂閱）
-- Streaming 進度條（vision call 可能 3-8 秒）
+- ~~免費配額（每月 N 次，超過導訂閱）~~ **v4 下架**：無變現需求，配額限制無意義
+- Streaming 進度條（vision call 可能 3-8 秒） → 移到 **M5.5**
 
 ### 驗收標準
 - [ ] 上傳一張衣物照片，5-10 秒內回傳結構化 detection
-- [ ] 配額用完顯示明確提示與 upgrade CTA
 - [ ] 低信心 detection 在 UI 上以警示樣式呈現
 - [ ] AI 結果 100% 經過 M4 session 確認流程才會寫入 snapshot
 
 ### 驗收方法
 - 層 1 + 層 2 + 層 3（mock claudeClient 的單元測試）
-- **黃金測試集**：建一個 `tests/golden-photos/` 含 10 張人工標註過的標準照片（衣物堆 / 抽屜 / 書架 / 廚房 / 桌面 / 玩具區 / 文件夾 / 工具區 / 美妝抽屜 / 雜物盒）
-  - 每張人工標註正確 detection
-  - 跑 AI 比對：誤差容忍 ±20% 數量、類別命中率 > 80%
+- 黃金測試集 → 移到 **M5.5**
 - 層 4 手動：找一個真實抽屜拍照，看建議是否合理
-- 層 5 使用者煙霧：找 3 位朋友拍自己家拍一個空間，問「結果合理嗎」
 
 ---
 
-## M6 · 方法論內容啟動（與 M5 並行）
+## M5.5 · 體驗精煉（v4 next up）
 
 ### 目標
-把示範 placeholder 換成真實授權的 3-5 套方法論；上線變現 C。
+把 M4 / M5 已有架構但 UX 沒做完的部分補完，**並把錄入摩擦壓到 ≤ 10 秒**。讓 app 達到「我願意每天打開」的水準。
 
 ### 範圍
-- 邀請名單（3-5 位收納師）+ 授權合約 outline
-- 方法論作者頁面（avatar / bio / 其他方法）
-- 方法論列表頁（瀏覽 / 試用 / 訂閱）
-- 訂閱金流（Stripe Web → 之後 IAP）
+
+**M4/M5 延後 UX 補完**
+- 容器歧義 UI（辨識到收納盒時詢問展開／不展開）
+- 低信心強制確認對話（confidence < 0.6 必須點一下）
+- Vision call streaming 進度條
+- Bbox 預覽 / 編輯 UI
+
+**錄入摩擦優化**
+- AddItem flow 全面計時：拍照、輸入、儲存各環節秒數
+- 砍掉非必要欄位 / tap、預填合理預設值
+- 「再來一個」快速連續錄入模式
+
+**真機驗證**
+- iOS 模擬器或實機跑 smoke test
+- Android 模擬器或實機跑 smoke test
+
+**Vision 品質迴歸**
+- 黃金測試集 `tests/golden-photos/`（10 張人工標註照片）
+- 跑 AI 比對：誤差容忍 ±20% 數量、類別命中率 > 80%
+- **此項目需使用者提供照片**
 
 ### 驗收標準
-- [ ] 至少 3 位收納師簽完授權合約
-- [ ] 每位至少 1 套方法論 JSON 上線（rules 數量 ≥ 5 條）
-- [ ] 訂閱 / 取消訂閱流程可走完
-- [ ] 切換訂閱中方法論 → 建議內容立即反映
+- [ ] 從 launcher 點開 app 到「新增完一個物品」≤ 10 秒（含拍照）
+- [ ] 容器歧義 / 低信心 / streaming / bbox 四個 UI 都跑得通
+- [ ] iOS + Android 至少各 1 台跑得起來、5 tab 不 crash
+- [ ] 黃金測試集跑過，類別命中率 > 80%
 
 ### 驗收方法
-- 層 4：用 3-5 個假帳號實際走完訂閱流程
-- 層 5：請收納師本人試用 app 看自己的方法論落地對不對
+- 層 4 手動：自己用 2 週，每天至少錄入 5 件物品，記錄卡關
+- 層 1-3 不退化
+
+---
+
+## M6 · 使用者煙霧測試（v4 主線）
+
+> **注意**：v4 的 M6 = **使用者煙霧測試**，不是 v3 的「方法論內容啟動」。原 v3 的 M6（收納師授權 / 訂閱金流）已 v4 下架，封存於下方「已下架里程碑」段與 `docs/m6-outreach/`。
+
+### 目標
+找出「真實使用者離不離得開這個 app」。蒐集卡關點 → 回饋到下一輪迭代。
+
+### 範圍
+- 招募 5-10 位非團隊成員（家人、朋友、同事均可，但**不是工程師**）
+- 連續使用 2 週
+- 每位使用者錄入自己家至少 1 個空間 + 10 件物品
+- 每週 1 次 15 分鐘訪談（電話或文字）
+
+### 驗收標準
+- [ ] 5-10 位實際完成 2 週測試
+- [ ] 至少 3 位回答「我會繼續用 / 推薦給朋友」
+- [ ] 蒐集到具體卡關清單（依嚴重度排序）
+- [ ] 依卡關清單規劃下一輪迭代（v5 plan 起點）
+
+### 驗收方法
+- 層 5 使用者煙霧：直接訪談 + 觀察實際使用錄影 / 截圖
+- 出口指標：訪談結果決定 v5 主線是「繼續打磨」還是「擴展功能」
 
 ### 開放問題
-- 收納師授權形式：買斷 / 永久分潤 / 訂閱抽成？
-- 內容更新義務（每月 1 條新規則？）
+- 找誰測？（最好包含至少 1 位非科技背景使用者）
+- 怎麼觀察？（自陳 vs. 看實際操作）
 
 ---
 
-## M7 · 客製收納箱
+## 🗄️ 已下架的里程碑（v3 → v4 封存）
 
-### 目標
-把線上方案實體化：app 的 AI 建議能直接導到一個可下單的箱子。
+以下 milestones 在 v3 規劃中存在，**v4 整體下架**。code / 文件保留不刪，未來真要做時不必重寫。
 
-### 範圍
-- `types/box.ts`：材質、尺寸、雷雕字、QR payload、SKU、價格
-- `services/box.ts`：空間 + 物品 → 推薦箱規
-- 訂購流程：草稿 → 已下單 → 製作中 → 出貨 → 已到貨
-- 雷雕字預覽：**SVG outline 模式**（字型轉外框，不依賴字型檔，可直接給雷雕機）
-- 出貨後 QR 一掃 → 跳該空間頁面（deep link 已預備）
+### ~~M6 舊 · 方法論內容變現~~
+- 邀請 3-5 收納師、授權合約、訂閱金流
+- 封存原因：產品未達 PMF 前談內容授權與訂閱是顛倒因果
+- 材料位置：`docs/m6-outreach/`（5 份文件保留）
 
-### 驗收標準
-- [ ] 跑 3 個典型空間（衣櫃 / 抽屜 / 書桌）→ 每個推薦至少 1 個箱規格
-- [ ] 推薦的尺寸 ± 工廠 SKU 容差內可生產
-- [ ] SVG outline 在 LightBurn / Illustrator 開啟字型完整不破
-- [ ] 訂單狀態流轉可雙向（出貨 → 已到貨）
+### ~~M7 舊 · 客製收納箱~~
+- `types/box.ts` / 訂單流程 / SVG outline / 雷雕工廠合作
+- 封存原因：實體 SKU 需要供應鏈與庫存管理，遠離「app 是否好用」核心
 
-### 驗收方法
-- 層 1 + 層 2
-- 層 4：手動跑訂購流程，把 SVG 匯出後丟給工廠驗證可雷雕
-- 工廠端驗收：實際打樣 1 個箱子
-
-### 開放問題
-- 自架工坊 vs. 外包代工
-- 金流：Shopify / 蝦皮 / 自架
-
----
-
-## M8 · 雲端 + 上架
-
-### 目標
-從 demo-able 到 download-able。
-
-### 範圍
-- Backend：Supabase（Auth + Postgres）
-- Repository 介面 → `RemoteRepository` 實作
-- Auth：phone or email magic link
-- 家庭群組 ACL
-- EAS Build + Submit
-- App Store / Google Play 描述 / 截圖 / 預覽影片
-- Landing page（amberstash.com，Claude Design 出視覺 + Next.js 接 waitlist）
-- 隱私政策 / 服務條款
-- 埋點：PostHog / Mixpanel
-
-### 驗收標準
-- [ ] 跨裝置登入後資料同步（一台手機新增物品，另一台 30 秒內看到）
-- [ ] App Store / Play Store submit 通過
-- [ ] Landing page Lighthouse > 90
-- [ ] 隱私政策 / TOS 上線並可從 app 內連到
-- [ ] 100 個 waitlist 註冊
-
-### 驗收方法
-- 層 4 + 層 5
-- 真實裝置雙開、用兩個 Apple ID 走完整流程
-- 找 10 位外部使用者跑一次 onboarding，記錄卡關點
+### ~~M8 舊 · 雲端 + 上架 + 訂閱~~
+- 拆分：
+  - 雲端同步、Auth、EAS Build、商店上架 → v4 後選項（見現況 Snapshot 🟡 區）
+  - 訂閱金流、Landing waitlist、埋點 → 整體下架
 
 ---
 
@@ -404,13 +418,16 @@ MVP 階段 UX 驗證 > 多裝置同步。Repository 介面解耦，M8 換 Supaba
 ### ADR-003 · 標籤輸出選 HTML + expo-print 而非 SVG-only
 HTML/CSS 開發迭代快、列印 + PDF 一條路徑兩用途。雷雕級 SVG outline 留到 M7。
 
-### ADR-004 · inventory 免費、AI 推薦付費
-inventory 是資料壁壘（越多人用模型越準）。AI 推薦是 hero feature，付費鉤子最強。
+### ADR-004 · ~~inventory 免費、AI 推薦付費~~ → v4 撤銷
+- v3 原規劃：inventory 免費（資料壁壘），AI 推薦付費（hero hook）
+- **v4 撤銷**：產品未達 PMF 前談付費鉤子是顛倒因果；v4 全部功能對使用者免費，先確認有人離不開
 
-### ADR-005 · 加入「收納師方法論」這條線（四角飛輪）
-- 純 AI 推薦同質化風險高；綁定授權方法論是內容護城河
-- 三方市場：使用者 / 收納師 / 工廠 相互強化
-- AI 常駐、方法論專家頻道；不接 1-on-1（保持工具 / 內容定位）
+### ADR-005 · 方法論引擎保留、商業化下架（v4 修訂）
+- v3 原規劃：邀請收納師授權 → 訂閱變現
+- **v4 修訂**：方法論引擎本身（JSON 規則 + 切換 UI + 內建 2 套示範方法論）是讓建議「真的有用」的核心，**保留**
+- 邀請外部收納師 / 簽授權合約 / 訂閱金流 = v4 範圍外
+- 內建的 `amberstash-default` + `konmari-zh`（作為示範方法論）持續打磨內容品質
+- 三方市場（使用者 / 收納師 / 工廠）= post-PMF 才有意義的飛輪，現在不追
 
 ### ADR-006 · 方法論用 JSON 結構化規則而非純 prompt
 - 規則離線可跑（無 LLM 也穩定）
@@ -421,8 +438,16 @@ inventory 是資料壁壘（越多人用模型越準）。AI 推薦是 hero feat
 ### ADR-007 · Session + Snapshot 而非累加模型
 累加模型結構性無法避免重複計算。Snapshot 不可變、Session 提供「拍照 → 提案 → 確認」中介層。
 
-### ADR-008 · M5 / M6 並行而非串行
-M5 是工程任務（可內部自驅）、M6 是供應鏈任務（看外部進度）。串行會浪費時段。
+### ADR-008 · ~~M5 / M6 並行而非串行~~ → v4 失效
+- v3 假設：M5 工程 + M6 供應鏈並行省時段
+- v4 撤銷：M6 舊（供應鏈 / 收納師授權）整體下架；v4 主線改為 M5 → M5.5 → M6 新（使用者煙霧測試）線性走
+
+### ADR-009 · v4 收斂目標到「先做出一個好用的 app」
+- 觸發：v3 的三條變現線在工程節奏上拖累「app 是否好用」的核心驗證
+- 決策：產品目標收斂為單一指標 — 5-10 位真實使用者連用 2 週後願意推薦
+- 連動下架：M6 舊（內容變現）、M7 舊（客製箱銷售）、M8 訂閱金流 / 埋點 / Landing waitlist
+- 連動保留：M3 方法論引擎（讓建議真有用的核心）、M5 Claude Vision（壓低錄入摩擦的關鍵）
+- 可逆：若 M6 使用者煙霧測試驗證 PMF，v5 可重新評估啟用任一變現線（材料 / code 都保留）
 
 ---
 
@@ -432,7 +457,7 @@ M5 是工程任務（可內部自驅）、M6 是供應鏈任務（看外部進�
 
 1. `README.md` — 怎麼跑起來
 2. `docs/competitive-analysis.md` — 為什麼這個產品有市場
-3. `docs/pitch-brief.md` — 視覺方向 + 四角飛輪 + 三變現線
+3. `docs/pitch-brief.md` — 視覺方向（注意：pitch-brief 內的「四角飛輪 / 三變現線」屬 v3 vision，v4 已收斂到「先做出好用的 app」，pitch 內容僅供長期 vision 參考，不要當作 v4 工程目標）
 4. `docs/development-plan.md`（本文件）— 工程節奏
 5. `src/types/` — 資料模型（先讀 `index.ts` 與 `methodology.ts`）
 6. `src/services/methodologies/` — 方法論定義（先讀 `default.ts` 與 `index.ts`）
