@@ -110,6 +110,12 @@
   - 跨派規則文字加入：KonMari 拍照留念再放手（Chu & Shu 2023）、KonMari + 斷捨離 20/20 法則
   - Onboarding：5 個 phase 卡片
   - 新增永久知識庫 `docs/methodology-knowledge.md`（10 章節 + 增派 checklist）
+- [x] **M5.5-T2.0 onboarding 問答推薦系統（v4，111 tests）**
+  - 新增 `src/services/methodologyQuiz.ts` — 5 題核心問答，每題每選項給對應方法論加 weight
+  - 5 題涵蓋 7 個差異軸：痛點 / 情感 / 節奏 / 居住 / 目標（居住軸權重 +5，因為是客觀事實）
+  - `scoreQuiz()` + `topRecommendations()` 純函式 — 跑分後取 top 3 展示
+  - OnboardingScreen 三步流程：CIR 自評 → 5 題 quiz（含進度條）→ 推薦結果（top 3 + 全 10 派 fallback）
+  - 13 個新測試含 5 個經典 profile：囤物者→斷捨離 / IG 美學→Home Edit / ADHD→KC Davis / 多代同堂→廖心筠 / 小坪數→micro-rental / 衣物焦點→衣櫥醫生
 - [x] **M5.5-T1.9 A-H 八項整合擴張（v4，98 tests）**
   - **A** 競品分析 `docs/competitive-analysis.md` v2：加入台灣本土觀察（藍海 / Whering 對標 / 整理產業數字 / 心理文化獨特性）+ v4 修訂結論
   - **B** Onboarding 加 CIR 自評三層（輕度→maintenance / 中度→mindset / 重度→gentle-reset + CBT 安全建議）
