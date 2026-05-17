@@ -390,18 +390,22 @@ export function AddItemScreen({ navigation }: Props) {
   }
 
   // 收納師原則 2：「全部拿出來才看得見真相」 — session 開始時提醒先清空
-  const showEmptyFirstHint = spaceId && pendings.length === 0;
+  const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
+  const showEmptyFirstHint = spaceId && pendings.length === 0 && !emptyHintDismissed;
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {showEmptyFirstHint && selectedSpace && (
-          <View style={styles.tipBanner}>
-            <Text style={styles.tipBannerTitle}>📦 開始前的提醒</Text>
-            <Text style={styles.tipBannerBody}>
-              收納師原則：先把「{selectedSpace.name}」裡的東西全部拿出來再開始拍照／登錄。看見總量才能做篩選決定，不全部取出，你不會知道自己有 30 支筆、15 件黑 T。
-            </Text>
-          </View>
+          <Pressable style={styles.tipBanner} onPress={() => setEmptyHintDismissed(true)}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.tipBannerTitle}>📦 先把「{selectedSpace.name}」全部清空再拍</Text>
+              <Text style={styles.tipBannerBody}>
+                看見總量才能做篩選決定。
+              </Text>
+            </View>
+            <Text style={styles.tipDismiss}>✕</Text>
+          </Pressable>
         )}
         <View style={styles.photoBox}>
           {photoUri ? (
@@ -658,7 +662,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, paddingBottom: 40 },
   photoBox: {
-    height: 200,
+    height: 140,
     borderRadius: 14,
     backgroundColor: colors.card,
     borderWidth: 1,
@@ -666,7 +670,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   photo: { width: '100%', height: '100%' },
   photoHint: { color: colors.textMuted },
@@ -749,15 +753,20 @@ const styles = StyleSheet.create({
   aiBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   aiHint: { fontSize: 12, color: colors.textMuted, marginTop: 8, lineHeight: 18 },
   tipBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: 12,
-    borderLeftWidth: 4,
+    borderRadius: 10,
+    borderLeftWidth: 3,
     borderLeftColor: colors.accent,
-    padding: 12,
-    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    gap: 8,
   },
-  tipBannerTitle: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 4 },
-  tipBannerBody: { fontSize: 12, color: colors.text, lineHeight: 18 },
+  tipBannerTitle: { fontSize: 12, fontWeight: '700', color: colors.text },
+  tipBannerBody: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  tipDismiss: { fontSize: 16, color: colors.textMuted, paddingHorizontal: 6 },
   zoneToggle: {
     marginTop: 10,
     borderRadius: 10,

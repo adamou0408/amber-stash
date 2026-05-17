@@ -17,12 +17,8 @@ import { colors } from '@/theme/colors';
 import {
   CATEGORY_LABEL,
   COLOR_HEX,
-  COLOR_LABEL,
   FREQUENCY_EMOJI,
   FREQUENCY_LABEL,
-  SPACE_EMOJI,
-  TIER_EMOJI,
-  TIER_LABEL,
   type Item,
   type Space,
   type UseFrequency,
@@ -151,60 +147,30 @@ export function ItemsScreen({ navigation }: Props) {
                 <Image source={{ uri: item.photoUri }} style={styles.thumb} />
               ) : (
                 <View style={[styles.thumb, styles.thumbPlaceholder]}>
-                  <Text style={styles.thumbPlaceholderText}>無圖</Text>
+                  <Text style={styles.thumbPlaceholderText}>📦</Text>
                 </View>
               )}
               <View style={styles.rowBody}>
-                <Text style={styles.rowTitle}>{item.name}</Text>
-                <Text style={styles.rowMeta}>
-                  {CATEGORY_LABEL[item.category]} · 數量 {item.quantity}
-                </Text>
-                <View style={styles.pillRow}>
-                  {space ? (
-                    <View style={styles.spacePill}>
-                      <Text style={styles.spacePillText}>
-                        {SPACE_EMOJI[space.kind]} {space.name}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {freq ? (
-                    <View style={styles.spacePill}>
-                      <Text style={styles.spacePillText}>
-                        {FREQUENCY_EMOJI[freq]} {FREQUENCY_LABEL[freq]}
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={[styles.spacePill, styles.pillWarn]}>
-                      <Text style={styles.pillWarnText}>待你定義頻率</Text>
-                    </View>
+                <View style={styles.titleRow}>
+                  <Text style={styles.rowTitle} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  {item.quantity > 1 && (
+                    <Text style={styles.qtyChip}>×{item.quantity}</Text>
                   )}
-                  {item.inGoldenZone ? (
-                    <View style={[styles.spacePill, styles.pillGold]}>
-                      <Text style={styles.pillGoldText}>✨ 黃金區</Text>
-                    </View>
-                  ) : null}
-                  {item.color ? (
-                    <View style={[styles.spacePill, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
-                      <View
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 5,
-                          backgroundColor: COLOR_HEX[item.color],
-                          borderWidth: 1,
-                          borderColor: colors.border,
-                        }}
-                      />
-                      <Text style={styles.spacePillText}>{COLOR_LABEL[item.color]}</Text>
-                    </View>
-                  ) : null}
-                  {item.visibilityTier ? (
-                    <View style={styles.spacePill}>
-                      <Text style={styles.spacePillText}>
-                        {TIER_EMOJI[item.visibilityTier]} {TIER_LABEL[item.visibilityTier]}
-                      </Text>
-                    </View>
-                  ) : null}
+                </View>
+                <View style={styles.metaRow}>
+                  {item.color && (
+                    <View
+                      style={[styles.colorDot, { backgroundColor: COLOR_HEX[item.color] }]}
+                    />
+                  )}
+                  <Text style={styles.rowMeta} numberOfLines={1}>
+                    {CATEGORY_LABEL[item.category]}
+                    {space ? ` · ${space.name}` : ''}
+                    {freq ? ` · ${FREQUENCY_EMOJI[freq]}` : ''}
+                    {item.inGoldenZone ? ' · ✨' : ''}
+                  </Text>
                 </View>
               </View>
             </Pressable>
@@ -244,25 +210,29 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
   },
-  thumb: { width: 56, height: 56, borderRadius: 10, marginRight: 12, backgroundColor: colors.card },
+  thumb: { width: 52, height: 52, borderRadius: 10, marginRight: 12, backgroundColor: colors.card },
   thumbPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  thumbPlaceholderText: { fontSize: 11, color: colors.textMuted },
-  rowBody: { flex: 1 },
-  rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
-  rowMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
-  spacePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
+  thumbPlaceholderText: { fontSize: 22 },
+  rowBody: { flex: 1, justifyContent: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rowTitle: { fontSize: 17, fontWeight: '700', color: colors.text, flex: 1 },
+  qtyChip: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
     backgroundColor: colors.card,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 },
+  colorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  spacePillText: { fontSize: 11, color: colors.text },
-  pillWarn: { backgroundColor: '#fff4e1', borderColor: '#e6a850' },
-  pillWarnText: { fontSize: 11, color: '#a76912' },
-  pillGold: { backgroundColor: '#fff9d9', borderColor: '#d4a317' },
-  pillGoldText: { fontSize: 11, color: '#7a5d05', fontWeight: '600' },
+  rowMeta: { fontSize: 12, color: colors.textMuted, flex: 1 },
   footer: { padding: 16, paddingBottom: 24 },
 });

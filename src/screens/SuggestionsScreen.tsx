@@ -19,16 +19,12 @@ import { generateSuggestions } from '@/services/suggestions';
 import { ALL_METHODOLOGIES, getExpertFor, getMethodology } from '@/services/methodologies';
 import { DEFAULT_METHODOLOGY } from '@/services/methodologies/default';
 import type { Suggestion } from '@/types';
-import {
-  LIFECYCLE_EMOJI,
-  LIFECYCLE_LABEL,
-  type Methodology,
-  type MethodologyPricing,
-} from '@/types/methodology';
+import { LIFECYCLE_EMOJI, LIFECYCLE_LABEL, type Methodology } from '@/types/methodology';
 
 export function SuggestionsScreen() {
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
   const [active, setActive] = useState<Methodology>(DEFAULT_METHODOLOGY);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const refresh = useCallback(async () => {
     const prefs = await loadPreferences();
@@ -74,43 +70,45 @@ export function SuggestionsScreen() {
         keyExtractor={(s) => s.id}
         ListHeaderComponent={
           <View>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>收納建議</Text>
-              <Text style={styles.headerBody}>
-                可切換不同方法論。每條建議都掛來源，方便你知道是誰的方法。
+            <Pressable
+              style={styles.activeBar}
+              onPress={() => setPickerOpen((v) => !v)}
+            >
+              <Text style={styles.activeEmoji}>
+                {LIFECYCLE_EMOJI[active.lifecyclePhase]}
               </Text>
-            </View>
-            <View style={styles.methodPicker}>
-              {ALL_METHODOLOGIES.map((m) => {
-                const on = m.id === active.id;
-                return (
-                  <Pressable
-                    key={m.id}
-                    style={[styles.methodChip, on && styles.methodChipOn]}
-                    onPress={() => onSwitch(m.id)}
-                  >
-                    <Text style={[styles.methodChipText, on && styles.methodChipTextOn]}>
-                      {LIFECYCLE_EMOJI[m.lifecyclePhase]} {m.name}
-                    </Text>
-                    <Text style={[styles.methodChipPrice, on && styles.methodChipPriceOn]}>
-                      {LIFECYCLE_LABEL[m.lifecyclePhase]} 階段
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <View style={styles.attribution}>
-              <View style={styles.attributionHeader}>
-                <Text style={styles.attributionTitle}>{active.name}</Text>
-                <View style={styles.phaseBadge}>
-                  <Text style={styles.phaseBadgeText}>
-                    {LIFECYCLE_EMOJI[active.lifecyclePhase]} {LIFECYCLE_LABEL[active.lifecyclePhase]}
-                  </Text>
-                </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.activeName} numberOfLines={1}>
+                  {active.name}
+                </Text>
+                <Text style={styles.activeMeta} numberOfLines={1}>
+                  {LIFECYCLE_LABEL[active.lifecyclePhase]} · by{' '}
+                  {expert?.displayName ?? '未知'}
+                </Text>
               </View>
-              <Text style={styles.attributionAuthor}>by {expert?.displayName ?? '未知'}</Text>
-              <Text style={styles.attributionDesc}>{active.description}</Text>
-            </View>
+              <Text style={styles.activeChevron}>{pickerOpen ? '▲' : '▼'}</Text>
+            </Pressable>
+            {pickerOpen && (
+              <View style={styles.methodPicker}>
+                {ALL_METHODOLOGIES.map((m) => {
+                  const on = m.id === active.id;
+                  return (
+                    <Pressable
+                      key={m.id}
+                      style={[styles.methodChip, on && styles.methodChipOn]}
+                      onPress={() => {
+                        onSwitch(m.id);
+                        setPickerOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.methodChipText, on && styles.methodChipTextOn]}>
+                        {LIFECYCLE_EMOJI[m.lifecyclePhase]} {m.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
           </View>
         }
         ListEmptyComponent={
@@ -130,62 +128,36 @@ export function SuggestionsScreen() {
   );
 }
 
-// kept for backward compat; not currently rendered in v4 (lifecycle phase shown instead)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function formatPricing(p: MethodologyPricing): string {
-  switch (p.kind) {
-    case 'free':
-      return '免費';
-    case 'subscription':
-      return `NT$ ${p.monthlyTwd}/月`;
-    case 'oneTime':
-      return `NT$ ${p.priceTwd}`;
-  }
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, paddingBottom: 40 },
-  header: { marginBottom: 12 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 4 },
-  headerBody: { fontSize: 13, color: colors.textMuted },
-  methodPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  methodChip: {
-    flexGrow: 1,
-    flexBasis: '45%',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  methodChipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  methodChipText: { fontSize: 13, fontWeight: '700', color: colors.text },
-  methodChipTextOn: { color: '#fff' },
-  methodChipPrice: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
-  methodChipPriceOn: { color: 'rgba(255,255,255,0.85)' },
-  attribution: {
+  activeBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.card,
     borderRadius: 14,
-    padding: 14,
+    padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 14,
+    marginBottom: 12,
+    gap: 12,
   },
-  attributionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  attributionTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
-  phaseBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+  activeEmoji: { fontSize: 28 },
+  activeName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  activeMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  activeChevron: { fontSize: 14, color: colors.textMuted, paddingHorizontal: 4 },
+  methodPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
+  methodChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 999,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  phaseBadgeText: { fontSize: 10, color: colors.text, fontWeight: '600' },
-  attributionAuthor: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  attributionDesc: { fontSize: 12, color: colors.text, marginTop: 6, lineHeight: 18 },
+  methodChipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  methodChipText: { fontSize: 13, fontWeight: '600', color: colors.text },
+  methodChipTextOn: { color: '#fff' },
   body: { fontSize: 14, color: colors.text, lineHeight: 20 },
 });

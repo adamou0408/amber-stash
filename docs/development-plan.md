@@ -110,6 +110,14 @@
   - 跨派規則文字加入：KonMari 拍照留念再放手（Chu & Shu 2023）、KonMari + 斷捨離 20/20 法則
   - Onboarding：5 個 phase 卡片
   - 新增永久知識庫 `docs/methodology-knowledge.md`（10 章節 + 增派 checklist）
+- [x] **M5.5-T2.1 UI 視覺層級精簡（v4，111 tests）**
+  - 底部 tab 5 → 4 個：Labels tab 移除，併入 SpacesStack（SpacesScreen 右上角 header button → LabelsScreen）
+  - tab bar 高度 60、icon 統一 20px（focused 全 opacity / inactive 55%）+ 文字標籤 11px
+  - ItemsScreen 大幅精簡：item title 15px→17px bold、quantity ×N inline chip、5 個 pills → 單行 meta（分類 · 空間 · freq emoji · ✨）+ 顏色變 dot；無圖 placeholder 改 📦 emoji 大字
+  - SpacesScreen：表單預設收起（dashed border 「＋ 新增空間」按鈕），需要時展開；row 容量警示只在 >80% 顯示百分比 + 邊框變橘 / 紅；標題 15px→17px
+  - SuggestionsScreen：方法論 chip picker 預設收起（單行 active bar 顯示當前方法論 emoji + 名 + 階段 + 作者），點開才展開全 10 派；移除多餘 attribution 卡
+  - ShoppingScreen：picks 行 3 行 → 2 行（name + brand inline + price），reason 點開才顯示；＋ 加入按鈕變圓形 pill
+  - AddItemScreen：photo box 200px→140px；「先清空」hint 可一鍵 ✕ 關閉、字體縮小 13→11px
 - [x] **M5.5-T2.0 onboarding 問答推薦系統（v4，111 tests）**
   - 新增 `src/services/methodologyQuiz.ts` — 5 題核心問答，每題每選項給對應方法論加 weight
   - 5 題涵蓋 7 個差異軸：痛點 / 情感 / 節奏 / 居住 / 目標（居住軸權重 +5，因為是客觀事實）

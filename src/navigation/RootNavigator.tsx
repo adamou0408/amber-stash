@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text } from 'react-native';
 import { colors } from '@/theme/colors';
 import { ItemsScreen } from '@/screens/ItemsScreen';
 import { AddItemScreen } from '@/screens/AddItemScreen';
@@ -13,17 +12,18 @@ import { ShoppingScreen } from '@/screens/ShoppingScreen';
 import { LabelsScreen } from '@/screens/LabelsScreen';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { loadPreferences } from '@/storage/preferencesStorage';
-import type { ItemsStackParamList } from './types';
+import type { ItemsStackParamList, SpacesStackParamList } from './types';
 
 const Tabs = createBottomTabNavigator();
 const ItemsStack = createNativeStackNavigator<ItemsStackParamList>();
+const SpacesStack = createNativeStackNavigator<SpacesStackParamList>();
 
 function ItemsStackNav() {
   return (
     <ItemsStack.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg },
-        headerTitleStyle: { color: colors.text },
+        headerTitleStyle: { color: colors.text, fontWeight: '700' },
       }}
     >
       <ItemsStack.Screen name="ItemsList" component={ItemsScreen} options={{ title: '物品' }} />
@@ -32,9 +32,23 @@ function ItemsStackNav() {
   );
 }
 
+function SpacesStackNav() {
+  return (
+    <SpacesStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.bg },
+        headerTitleStyle: { color: colors.text, fontWeight: '700' },
+      }}
+    >
+      <SpacesStack.Screen name="SpacesList" component={SpacesScreen} options={{ title: '空間' }} />
+      <SpacesStack.Screen name="Labels" component={LabelsScreen} options={{ title: '列印標籤' }} />
+    </SpacesStack.Navigator>
+  );
+}
+
 function tabIcon(emoji: string) {
   return ({ focused }: { focused: boolean }) => (
-    <Text style={{ fontSize: focused ? 22 : 18 }}>{emoji}</Text>
+    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.55 }}>{emoji}</Text>
   );
 }
 
@@ -43,9 +57,17 @@ function MainTabs() {
     <Tabs.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg },
-        headerTitleStyle: { color: colors.text },
+        headerTitleStyle: { color: colors.text, fontWeight: '700' },
         tabBarActiveTintColor: colors.primary,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          height: 60,
+          paddingBottom: 6,
+          paddingTop: 4,
+        },
       }}
     >
       <Tabs.Screen
@@ -54,19 +76,14 @@ function MainTabs() {
         options={{ title: '物品', headerShown: false, tabBarIcon: tabIcon('📦') }}
       />
       <Tabs.Screen
-        name="Spaces"
-        component={SpacesScreen}
-        options={{ title: '空間', tabBarIcon: tabIcon('🗄️') }}
-      />
-      <Tabs.Screen
-        name="Labels"
-        component={LabelsScreen}
-        options={{ title: '標籤', tabBarIcon: tabIcon('🏷️') }}
-      />
-      <Tabs.Screen
         name="Suggestions"
         component={SuggestionsScreen}
         options={{ title: '建議', tabBarIcon: tabIcon('💡') }}
+      />
+      <Tabs.Screen
+        name="SpacesTab"
+        component={SpacesStackNav}
+        options={{ title: '空間', headerShown: false, tabBarIcon: tabIcon('🗄️') }}
       />
       <Tabs.Screen
         name="Shopping"

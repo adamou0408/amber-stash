@@ -38,6 +38,7 @@ function formatPriceRange(min?: number, max?: number): string | null {
 export function ShoppingScreen() {
   const [items, setItems] = useState<ShoppingItem[] | null>(null);
   const [picks, setPicks] = useState<ShoppingPick[]>([]);
+  const [expandedPick, setExpandedPick] = useState<string | null>(null);
   const [name, setName] = useState('');
 
   const refresh = useCallback(async () => {
@@ -105,31 +106,44 @@ export function ShoppingScreen() {
             </View>
             {picks.length > 0 && (
               <View style={styles.picksCard}>
-                <Text style={styles.formTitle}>根據你的物品推薦</Text>
+                <Text style={styles.picksTitle}>💡 依你的物品推薦</Text>
                 {picks.map((p) => {
                   const priceLabel = formatPriceRange(p.priceTwdMin, p.priceTwdMax);
+                  const expanded = expandedPick === p.name;
                   return (
-                    <Pressable
-                      key={p.name}
-                      style={styles.pickRow}
-                      onPress={() => onAdd(p.name, p.reason)}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pickName}>{p.name}</Text>
-                        <View style={styles.pickMeta}>
-                          {p.brand ? (
-                            <View style={styles.brandPill}>
-                              <Text style={styles.brandPillText}>{p.brand}</Text>
-                            </View>
-                          ) : null}
-                          {priceLabel ? (
-                            <Text style={styles.priceText}>{priceLabel}</Text>
-                          ) : null}
+                    <View key={p.name}>
+                      <Pressable
+                        style={styles.pickRow}
+                        onPress={() => setExpandedPick(expanded ? null : p.name)}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.pickName} numberOfLines={2}>
+                            {p.name}
+                          </Text>
+                          <View style={styles.pickMeta}>
+                            {p.brand ? (
+                              <Text style={styles.brandText}>{p.brand}</Text>
+                            ) : null}
+                            {p.brand && priceLabel ? (
+                              <Text style={styles.metaDot}>·</Text>
+                            ) : null}
+                            {priceLabel ? (
+                              <Text style={styles.priceText}>{priceLabel}</Text>
+                            ) : null}
+                          </View>
                         </View>
-                        <Text style={styles.pickReason}>{p.reason}</Text>
-                      </View>
-                      <Text style={styles.pickAdd}>＋ 加入</Text>
-                    </Pressable>
+                        <Pressable
+                          onPress={() => onAdd(p.name, p.reason)}
+                          style={styles.addPill}
+                          hitSlop={6}
+                        >
+                          <Text style={styles.addPillText}>＋</Text>
+                        </Pressable>
+                      </Pressable>
+                      {expanded && (
+                        <Text style={styles.pickReasonExpanded}>{p.reason}</Text>
+                      )}
+                    </View>
                   );
                 })}
               </View>
@@ -184,11 +198,12 @@ const styles = StyleSheet.create({
   picksCard: {
     backgroundColor: colors.card,
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 16,
   },
+  picksTitle: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 4 },
   formTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 8 },
   row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   input: {
@@ -204,24 +219,31 @@ const styles = StyleSheet.create({
   pickRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderColor: colors.border,
+    gap: 10,
   },
-  pickName: { fontSize: 14, fontWeight: '600', color: colors.text },
-  pickMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  brandPill: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  brandPillText: { fontSize: 10, color: colors.text, fontWeight: '700' },
+  pickName: { fontSize: 14, fontWeight: '600', color: colors.text, lineHeight: 19 },
+  pickMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  brandText: { fontSize: 11, color: colors.text, fontWeight: '700' },
+  metaDot: { fontSize: 11, color: colors.textMuted },
   priceText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
-  pickReason: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  pickAdd: { color: colors.primary, fontWeight: '600' },
+  pickReasonExpanded: {
+    fontSize: 12,
+    color: colors.textMuted,
+    paddingBottom: 8,
+    lineHeight: 18,
+  },
+  addPill: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addPillText: { color: '#fff', fontSize: 18, fontWeight: '700', lineHeight: 22 },
   itemRow: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
