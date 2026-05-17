@@ -37,7 +37,16 @@ import {
 import type { Detection } from '@/types/snapshot';
 import { addItem, loadItems } from '@/storage/itemsStorage';
 import { loadSpaces } from '@/storage/spacesStorage';
-import { loadPreferences, rememberLastUsed } from '@/storage/preferencesStorage';
+import {
+  loadPreferences,
+  recordOneInOneOut,
+  rememberLastUsed,
+} from '@/storage/preferencesStorage';
+import {
+  defaultOneInOneOutState,
+  shouldShowOneInOneOutBanner,
+  type OneInOneOutState,
+} from '@/services/oneInOneOutDamper';
 import {
   addDetectionToSession,
   commitSnapshot,
@@ -83,6 +92,9 @@ export function AddItemScreen({ navigation }: Props) {
   // ---------- 連續錄入 / 體驗狀態 ----------
   const [savedCount, setSavedCount] = useState(0);
   const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
+  // 「一進一出」banner 顯示控制器 state — 從 prefs 載入，commit 後更新
+  const [oneInOneOutState, setOneInOneOutState] =
+    useState<OneInOneOutState>(defaultOneInOneOutState);
 
   // ---------- session state ----------
   const [mode, setMode] = useState<Mode>('capture');
@@ -111,6 +123,7 @@ export function AddItemScreen({ navigation }: Props) {
       if (prefs.lastSpaceId && sps.some((s) => s.id === prefs.lastSpaceId)) {
         setSpaceId(prefs.lastSpaceId);
       }
+      setOneInOneOutState(prefs.oneInOneOut);
     })();
     return () => {
       alive = false;
@@ -371,6 +384,12 @@ export function AddItemScreen({ navigation }: Props) {
       useFrequency: primaryFreq,
     });
 
+    // 更新「一進一出」banner damper state
+    // 與 review render 用同一條件判斷，確保一致性
+    const wasBannerShown =
+      summarizeDeltas().length > 0 && shouldShowOneInOneOutBanner(oneInOneOutState);
+    await recordOneInOneOut(wasBannerShown);
+
     navigation.goBack();
   }
 
@@ -393,6 +412,9 @@ export function AddItemScreen({ navigation }: Props) {
 
   if (mode === 'review') {
     const deltas = summarizeDeltas();
+    // 動態決定是否顯示「一進一出」banner — 避免使用者麻痺
+    const showOneInOneOut =
+      deltas.length > 0 && shouldShowOneInOneOutBanner(oneInOneOutState);
     return (
       <SafeAreaView edges={['bottom']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
@@ -401,8 +423,8 @@ export function AddItemScreen({ navigation }: Props) {
             這份 snapshot 會{selectedSpace ? `寫到「${selectedSpace.name}」` : ''}，取代該空間的當前狀態（不累加）。確認無誤後送出。
           </Text>
 
-          {/* 收納師原則 8：一進一出提示 */}
-          {deltas.length > 0 && (
+          {/* 收納師原則 8：一進一出提示（依 damper state 動態顯示） */}
+          {showOneInOneOut && (
             <View style={styles.tipBanner}>
               <Text style={styles.tipBannerTitle}>💡 一進一出原則</Text>
               <Text style={styles.tipBannerBody}>

@@ -1,5 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_METHODOLOGY } from '@/services/methodologies/default';
+import {
+  defaultOneInOneOutState,
+  nextOneInOneOutState,
+  type OneInOneOutState,
+} from '@/services/oneInOneOutDamper';
 import type { ItemCategory, UseFrequency } from '@/types';
 
 const KEY = 'amberstash.preferences.v1';
@@ -15,18 +20,29 @@ export type UserPreferences = {
   lastCategory?: ItemCategory;
   lastSpaceId?: string;
   lastUseFrequency?: UseFrequency;
+  /**
+   * 「一進一出」banner 顯示頻率動態降低器的 state — 詳見 oneInOneOutDamper.ts
+   */
+  oneInOneOut: OneInOneOutState;
 };
 
 const DEFAULTS: UserPreferences = {
   activeMethodologyId: DEFAULT_METHODOLOGY.id,
   onboarded: false,
+  oneInOneOut: defaultOneInOneOutState(),
 };
 
 export async function loadPreferences(): Promise<UserPreferences> {
   const raw = await AsyncStorage.getItem(KEY);
   if (!raw) return DEFAULTS;
   try {
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<UserPreferences>) };
+    const parsed = JSON.parse(raw) as Partial<UserPreferences>;
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      // 保證 oneInOneOut 一定是完整物件（舊資料可能沒有此欄位）
+      oneInOneOut: { ...defaultOneInOneOutState(), ...(parsed.oneInOneOut ?? {}) },
+    };
   } catch {
     return DEFAULTS;
   }
@@ -63,3 +79,16 @@ export async function rememberLastUsed(patch: {
   };
   await AsyncStorage.setItem(KEY, JSON.stringify(next));
 }
+
+/**
+ * 記錄一次 commit 是否實際顯示了「一進一出」banner — 更新 damper 計數。
+ */
+export async function recordOneInOneOut(wasShown: boolean): Promise<void> {
+  const prev = await loadPreferences();
+  const next: UserPreferences = {
+    ...prev,
+    oneInOneOut: nextOneInOneOutState(prev.oneInOneOut, wasShown),
+  };
+  await AsyncStorage.setItem(KEY, JSON.stringify(next));
+}
+

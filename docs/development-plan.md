@@ -110,6 +110,14 @@
   - 跨派規則文字加入：KonMari 拍照留念再放手（Chu & Shu 2023）、KonMari + 斷捨離 20/20 法則
   - Onboarding：5 個 phase 卡片
   - 新增永久知識庫 `docs/methodology-knowledge.md`（10 章節 + 增派 checklist）
+- [x] **M5.5-T2.4 一進一出 banner 動態減頻（v4，131 tests）**
+  - 修現有設計缺陷：banner 每次顯示會變成 banner blindness 噪音
+  - 純本機、純 counter + threshold（無學習演算法、無雲端依賴）
+  - 新 service `oneInOneOutDamper.ts` — 純函式 `shouldShowBanner` + `nextState`
+  - 三段衰減：學習 (< 3 shows 每次) → 淡出 (3-7 每 5 commit 一次) → 靜默 (≥ 8 完全停)
+  - preferencesStorage 加 `oneInOneOut: OneInOneOutState` + `recordOneInOneOut(wasShown)`
+  - AddItemScreen review render 用 `shouldShowOneInOneOutBanner`；commit 後呼叫 `recordOneInOneOut`
+  - +14 tests（damper 純函式 + storage round-trip + 端對端 30 次 commit 模擬 + legacy 資料 backfill）
 - [x] **M5.5-T2.3 點擊熱點優化（v4，117 tests）**
   - 連續錄入模式：quick-save 不再 goBack，留在頁面 + ✅ 已加入 N 件 banner + 「完成 →」按鈕；按鈕標籤動態變成「儲存並再加一個」
   - 預設值記憶：preferencesStorage 加 lastCategory / lastSpaceId / lastUseFrequency；mount 時自動套用；任何 save 後更新
