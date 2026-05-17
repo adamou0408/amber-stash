@@ -110,6 +110,15 @@
   - 跨派規則文字加入：KonMari 拍照留念再放手（Chu & Shu 2023）、KonMari + 斷捨離 20/20 法則
   - Onboarding：5 個 phase 卡片
   - 新增永久知識庫 `docs/methodology-knowledge.md`（10 章節 + 增派 checklist）
+- [x] **M5.5-T2.2 onboarding 點擊極簡化（v4，111 tests）**
+  - 從「7 click 必走 quiz 5 題」改為「2 click 完成」預設路徑
+  - 新流程：Step 1 Welcome（5 phase cards · 使用者語言）→ Step 2 Confirm（一鍵接受推薦派）→ done
+  - Quiz 變 opt-in 進階路徑（按「想要更精準」進入）
+  - 卡片標題改使用者語言：「想徹底整理一次」（不是 "deep-clean phase"）
+  - Hero typography：32px title / 13px brand label / 28px confirm headline — 視覺呼吸感
+  - CTA button 主要動作（橘 primary）vs skip 文字連結 — 引導視線到核心動作
+  - gentle-reset 分支：選了「整理過維持不住」自動跳 CIR 醫療警示 + 寬容派 / 銀髮派 2 選 1
+  - ItemsScreen 空狀態：emoji 56px / title 20px bold，從「拍照新增 + 載入示範資料」雙按鈕引導第一個物品
 - [x] **M5.5-T2.1 UI 視覺層級精簡（v4，111 tests）**
   - 底部 tab 5 → 4 個：Labels tab 移除，併入 SpacesStack（SpacesScreen 右上角 header button → LabelsScreen）
   - tab bar 高度 60、icon 統一 20px（focused 全 opacity / inactive 55%）+ 文字標籤 11px

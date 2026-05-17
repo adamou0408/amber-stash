@@ -121,13 +121,14 @@ export function ItemsScreen({ navigation }: Props) {
         keyExtractor={(it) => it.id}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>還沒登錄任何物品</Text>
+            <Text style={styles.emptyEmoji}>📦</Text>
+            <Text style={styles.emptyTitle}>從第一件物品開始</Text>
             <Text style={styles.emptyBody}>
-              從一個抽屜開始，拍張照、選個分類就好。或者先載入示範資料看看 app 長怎樣。
+              拍張照、選分類就好。建議從你最常用的抽屜開始。
             </Text>
             <View style={styles.emptyActions}>
-              <Button title="＋ 新增物品" onPress={() => navigation.navigate('AddItem')} />
-              <Button title="載入示範資料" variant="secondary" onPress={onLoadDemo} />
+              <Button title="拍照新增" onPress={() => navigation.navigate('AddItem')} />
+              <Button title="先看示範資料" variant="secondary" onPress={onLoadDemo} />
             </View>
           </View>
         }
@@ -190,8 +191,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { padding: 16, paddingBottom: 80 },
-  empty: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 24 },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 4 },
+  empty: { alignItems: 'center', paddingVertical: 50, paddingHorizontal: 24 },
+  emptyEmoji: { fontSize: 56, marginBottom: 16 },
+  emptyTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 8 },
   emptyBody: {
     fontSize: 14,
     color: colors.textMuted,
@@ -199,7 +201,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     lineHeight: 20,
   },
-  emptyActions: { gap: 10, alignSelf: 'stretch', marginTop: 20 },
+  emptyActions: { gap: 10, alignSelf: 'stretch', marginTop: 24 },
   row: {
     flexDirection: 'row',
     backgroundColor: colors.surface,

@@ -6,16 +6,14 @@ import {
   LIFECYCLE_DESC,
   LIFECYCLE_EMOJI,
   LIFECYCLE_LABEL,
+  type LifecyclePhase,
 } from '@/types/methodology';
 import {
   ALL_METHODOLOGIES,
-  CIR_DESCRIPTION,
-  CIR_LABEL,
   CIR_SEVERE_ADVISORY,
-  CIR_TO_PHASE,
   getExpertFor,
+  methodologiesForPhase,
   methodologyForPhase,
-  type CIRLevel,
 } from '@/services/methodologies';
 import {
   QUIZ_QUESTIONS,
@@ -29,19 +27,52 @@ type Props = {
   onDone: () => void;
 };
 
-type Step = 'cir' | 'severe-warning' | 'quiz' | 'recommendations';
+type Step =
+  | 'welcome' // Step 1: 5 phase cards
+  | 'confirm' // Step 2: 接受推薦 / 換同階段其他派
+  | 'severe-warning' // gentle-reset 分支：CIR 醫療警示
+  | 'quiz' // 進階：5 題精準
+  | 'recommendations'; // 進階：quiz 結果
 
-const CIR_LEVELS: CIRLevel[] = ['light', 'moderate', 'severe'];
-
-const CIR_EMOJI: Record<CIRLevel, string> = {
-  light: '🟢',
-  moderate: '🟡',
-  severe: '🔴',
-};
+/**
+ * Welcome 畫面卡片 — 每個 lifecycle phase 一張，文字以「使用者語言」描述
+ * 而非工程術語（不要寫 "mindset phase"，要寫「想改變對物品的想法」）
+ */
+const WELCOME_CARDS: {
+  phase: LifecyclePhase;
+  headline: string;
+  sub: string;
+}[] = [
+  {
+    phase: 'deep-clean',
+    headline: '徹底整理一次',
+    sub: '想花週末把家裡好好整理過',
+  },
+  {
+    phase: 'mindset',
+    headline: '改變對物品的想法',
+    sub: '想先想清楚再動手',
+  },
+  {
+    phase: 'maintenance',
+    headline: '每天能維持就好',
+    sub: '不大整理，只要日常順手',
+  },
+  {
+    phase: 'aesthetic',
+    headline: '家裡要美美的',
+    sub: '基礎收納 OK 了，想再升級視覺',
+  },
+  {
+    phase: 'gentle-reset',
+    headline: '整理過維持不住',
+    sub: '不想被責備、想用溫和方式',
+  },
+];
 
 export function OnboardingScreen({ onDone }: Props) {
-  const [step, setStep] = useState<Step>('cir');
-  const [cirChoice, setCirChoice] = useState<CIRLevel | null>(null);
+  const [step, setStep] = useState<Step>('welcome');
+  const [chosenPhase, setChosenPhase] = useState<LifecyclePhase | null>(null);
   const [quizIndex, setQuizIndex] = useState(0);
   const [answers, setAnswers] = useState<SelectedAnswers>({});
 
@@ -51,15 +82,33 @@ export function OnboardingScreen({ onDone }: Props) {
     [scores],
   );
 
-  function onPickCIR(level: CIRLevel) {
-    setCirChoice(level);
-    if (level === 'severe') {
+  // ============================================================
+  // 主動作 — 一鍵完成 onboarding（最少 click）
+  // ============================================================
+  async function applyAndDone(methodologyId: string) {
+    await setActiveMethodology(methodologyId);
+    onDone();
+  }
+
+  async function onSkip() {
+    await markOnboarded();
+    onDone();
+  }
+
+  function onPickWelcome(phase: LifecyclePhase) {
+    setChosenPhase(phase);
+    if (phase === 'gentle-reset') {
+      // 維持不住 → 進 CIR 安全網
       setStep('severe-warning');
     } else {
-      setStep('quiz');
-      setQuizIndex(0);
-      setAnswers({});
+      setStep('confirm');
     }
+  }
+
+  function onStartQuiz() {
+    setQuizIndex(0);
+    setAnswers({});
+    setStep('quiz');
   }
 
   function onPickQuizOption(questionId: string, optionId: string) {
@@ -75,58 +124,38 @@ export function OnboardingScreen({ onDone }: Props) {
     if (quizIndex > 0) {
       setQuizIndex(quizIndex - 1);
     } else {
-      setStep('cir');
+      setStep('confirm');
     }
   }
 
-  async function onAcceptGentle() {
-    const m = methodologyForPhase('gentle-reset');
-    await setActiveMethodology(m.id);
-    onDone();
-  }
-
-  async function onPickRecommended(methodologyId: string) {
-    await setActiveMethodology(methodologyId);
-    onDone();
-  }
-
-  async function onSkip() {
-    await markOnboarded();
-    onDone();
-  }
-
   // ============================================================
-  // Step 1 · CIR 自評
+  // Step 1 · Welcome（5 phase 卡片）
   // ============================================================
-  if (step === 'cir') {
+  if (step === 'welcome') {
     return (
       <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.stepHint}>1 / 3 · 自評嚴重程度</Text>
-          <Text style={styles.title}>歡迎來到 Amber Stash</Text>
-          <Text style={styles.subtitle}>
-            開始前，讓我了解你現在的家狀況。三個選項任選最像的一個 — 這不是評斷你，是用 Frost
-            雜物影像評估量表（CIR）幫你選對工具。
-          </Text>
+          <Text style={styles.brand}>Amber Stash</Text>
+          <Text style={styles.heroTitle}>整理沒有對錯</Text>
+          <Text style={styles.heroSub}>選一個現在感覺對的開始，之後隨時可以換。</Text>
 
-          {CIR_LEVELS.map((level) => (
+          {WELCOME_CARDS.map(({ phase, headline, sub }) => (
             <Pressable
-              key={level}
-              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-              onPress={() => onPickCIR(level)}
+              key={phase}
+              style={({ pressed }) => [styles.heroCard, pressed && styles.cardPressed]}
+              onPress={() => onPickWelcome(phase)}
             >
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardEmoji}>{CIR_EMOJI[level]}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardPhase}>{CIR_LABEL[level]}</Text>
-                </View>
+              <Text style={styles.heroEmoji}>{LIFECYCLE_EMOJI[phase]}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroCardTitle}>{headline}</Text>
+                <Text style={styles.heroCardSub}>{sub}</Text>
               </View>
-              <Text style={styles.cardDesc}>{CIR_DESCRIPTION[level]}</Text>
+              <Text style={styles.heroChevron}>›</Text>
             </Pressable>
           ))}
 
           <Pressable onPress={onSkip} style={styles.skipBtn}>
-            <Text style={styles.skipText}>跳過 — 用預設方法論</Text>
+            <Text style={styles.skipText}>我先看看 →</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
@@ -134,34 +163,99 @@ export function OnboardingScreen({ onDone }: Props) {
   }
 
   // ============================================================
-  // Step 1.5 · 重度警示
+  // Step 2 · Confirm（接受推薦 / 換同階段其他派 / 進 quiz）
+  // ============================================================
+  if (step === 'confirm' && chosenPhase) {
+    const recommended = methodologyForPhase(chosenPhase);
+    const expert = getExpertFor(recommended.id);
+    const alternatives = methodologiesForPhase(chosenPhase).filter(
+      (m) => m.id !== recommended.id,
+    );
+
+    return (
+      <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Pressable onPress={() => setStep('welcome')} style={styles.backLink}>
+            <Text style={styles.backLinkText}>← 重選</Text>
+          </Pressable>
+
+          <Text style={styles.confirmHello}>
+            {LIFECYCLE_EMOJI[chosenPhase]} {LIFECYCLE_LABEL[chosenPhase]} 階段
+          </Text>
+          <Text style={styles.confirmHeadline}>{recommended.name}</Text>
+          <Text style={styles.confirmAuthor}>by {expert?.displayName ?? '系統'}</Text>
+          <Text style={styles.confirmDesc}>{recommended.description}</Text>
+
+          <Pressable
+            onPress={() => applyAndDone(recommended.id)}
+            style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+          >
+            <Text style={styles.ctaText}>就這樣開始 →</Text>
+          </Pressable>
+
+          {alternatives.length > 0 && (
+            <>
+              <Text style={styles.altTitle}>或同階段的其他派</Text>
+              {alternatives.map((m) => (
+                <Pressable
+                  key={m.id}
+                  onPress={() => applyAndDone(m.id)}
+                  style={({ pressed }) => [styles.altCard, pressed && styles.cardPressed]}
+                >
+                  <Text style={styles.altName}>{m.name}</Text>
+                  <Text style={styles.altDesc} numberOfLines={2}>
+                    {m.description}
+                  </Text>
+                </Pressable>
+              ))}
+            </>
+          )}
+
+          <Pressable onPress={onStartQuiz} style={styles.advLink}>
+            <Text style={styles.advLinkText}>還不確定？回答 5 題以更精準推薦</Text>
+          </Pressable>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ============================================================
+  // Step 2.5 · gentle-reset 分支：CIR 醫療警示
   // ============================================================
   if (step === 'severe-warning') {
     return (
       <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>謝謝你的誠實</Text>
+          <Pressable onPress={() => setStep('welcome')} style={styles.backLink}>
+            <Text style={styles.backLinkText}>← 重選</Text>
+          </Pressable>
+
+          <Text style={styles.confirmHello}>🌿 你選了「維持不住」</Text>
+          <Text style={styles.confirmHeadline}>謝謝你的誠實</Text>
           <View style={styles.warningCard}>
             <Text style={styles.warningText}>{CIR_SEVERE_ADVISORY}</Text>
           </View>
-          <Text style={[styles.subtitle, { marginTop: 16 }]}>
-            Amber Stash 不會也不應該取代專業協助。但作為陪伴工具，我們會用「寬容派」給你最低壓力的支援。準備好了嗎？
+
+          <Text style={styles.confirmDesc}>
+            Amber Stash 不會也不應該取代專業協助。但作為陪伴工具，「寬容派」會給你最低壓力的支援。
           </Text>
+
           <Pressable
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            onPress={onAcceptGentle}
+            onPress={() => applyAndDone('gentle-zh')}
+            style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardEmoji}>🌿</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.cardPhase}>進入寬容派模式</Text>
-                <Text style={styles.cardQuestion}>「家為你服務，不是你為家服務」</Text>
-              </View>
-            </View>
-            <Text style={styles.cardDesc}>{LIFECYCLE_DESC['gentle-reset']}</Text>
+            <Text style={styles.ctaText}>進入寬容派 →</Text>
           </Pressable>
-          <Pressable onPress={() => setStep('cir')} style={styles.skipBtn}>
-            <Text style={styles.skipText}>← 回上一步</Text>
+
+          <Text style={styles.altTitle}>或選銀髮 / 遺物整理版</Text>
+          <Pressable
+            onPress={() => applyAndDone('elder-zh')}
+            style={({ pressed }) => [styles.altCard, pressed && styles.cardPressed]}
+          >
+            <Text style={styles.altName}>銀髮 / 傳承整理</Text>
+            <Text style={styles.altDesc} numberOfLines={2}>
+              為長輩或家屬陪伴整理 — 安全 + 傳承優先於減量。
+            </Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
@@ -169,70 +263,55 @@ export function OnboardingScreen({ onDone }: Props) {
   }
 
   // ============================================================
-  // Step 2 · Quiz（5 題）
+  // 進階路徑 · Quiz（5 題）
   // ============================================================
   if (step === 'quiz') {
     const q = QUIZ_QUESTIONS[quizIndex];
     return (
       <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.stepHint}>
-            2 / 3 · 核心概念問答（{quizIndex + 1} / {QUIZ_QUESTIONS.length}）
-          </Text>
+          <Pressable onPress={onBackQuiz} style={styles.backLink}>
+            <Text style={styles.backLinkText}>
+              ← {quizIndex === 0 ? '回確認' : '上一題'}
+            </Text>
+          </Pressable>
 
           <View style={styles.progressBar}>
             {QUIZ_QUESTIONS.map((_, i) => (
               <View
                 key={i}
-                style={[
-                  styles.progressDot,
-                  i <= quizIndex && styles.progressDotActive,
-                ]}
+                style={[styles.progressDot, i <= quizIndex && styles.progressDotActive]}
               />
             ))}
           </View>
 
           <Text style={styles.questionText}>{q.text}</Text>
-          <Text style={styles.questionAxis}>{q.axis}</Text>
 
           {q.options.map((opt) => (
             <Pressable
               key={opt.id}
-              style={({ pressed }) => [
-                styles.optionCard,
-                pressed && styles.cardPressed,
-              ]}
+              style={({ pressed }) => [styles.optionCard, pressed && styles.cardPressed]}
               onPress={() => onPickQuizOption(q.id, opt.id)}
             >
               <Text style={styles.optionLabel}>{opt.label}</Text>
             </Pressable>
           ))}
-
-          <Pressable onPress={onBackQuiz} style={styles.skipBtn}>
-            <Text style={styles.skipText}>← {quizIndex === 0 ? '回自評' : '上一題'}</Text>
-          </Pressable>
         </ScrollView>
       </SafeAreaView>
     );
   }
 
   // ============================================================
-  // Step 3 · 推薦結果
+  // 進階路徑 · 推薦結果（quiz 跑完）
   // ============================================================
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.stepHint}>3 / 3 · 你的推薦</Text>
-        <Text style={styles.title}>依你的回答，我們推薦…</Text>
-        <Text style={styles.subtitle}>
-          以下是匹配度最高的前 3 派。沒有絕對的對錯 — 選一個現在最有感的開始，之後在「建議」tab
-          隨時可換派。
-        </Text>
+        <Text style={styles.confirmHello}>依你的回答</Text>
+        <Text style={styles.confirmHeadline}>最推薦…</Text>
 
         {recommendations.length === 0 ? (
-          <Text style={styles.empty}>
-            分數計算不到結果。請回去自評或跳過用預設派。
-          </Text>
+          <Text style={styles.empty}>分數不到結果。請回去重答或跳過。</Text>
         ) : (
           recommendations.map((rec, idx) => {
             const m = rec.methodology;
@@ -241,51 +320,30 @@ export function OnboardingScreen({ onDone }: Props) {
             return (
               <Pressable
                 key={m.id}
+                onPress={() => applyAndDone(m.id)}
                 style={({ pressed }) => [
-                  styles.card,
-                  isTop && styles.cardSuggested,
+                  styles.recCard,
+                  isTop && styles.recCardTop,
                   pressed && styles.cardPressed,
                 ]}
-                onPress={() => onPickRecommended(m.id)}
               >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardEmoji}>{LIFECYCLE_EMOJI[m.lifecyclePhase]}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.cardPhase}>
-                      {idx === 0 ? '★ 最推薦：' : `${idx + 1}. `}
-                      {m.name}
-                    </Text>
-                    <Text style={styles.cardQuestion}>
-                      {LIFECYCLE_LABEL[m.lifecyclePhase]} 階段 · 匹配 {rec.score} 分
-                      {expert ? ` · by ${expert.displayName}` : ''}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.cardDesc}>{m.description}</Text>
+                {isTop && <Text style={styles.recBadge}>★ 最匹配</Text>}
+                <Text style={styles.recName}>
+                  {LIFECYCLE_EMOJI[m.lifecyclePhase]} {m.name}
+                </Text>
+                <Text style={styles.recMeta}>
+                  匹配 {rec.score} 分 · by {expert?.displayName ?? '系統'}
+                </Text>
+                <Text style={styles.recDesc} numberOfLines={2}>
+                  {m.description}
+                </Text>
               </Pressable>
             );
           })
         )}
 
-        <View style={styles.divider} />
-
-        <Text style={styles.expandHint}>或從全部 10 派中選</Text>
-        {ALL_METHODOLOGIES.filter(
-          (m) => !recommendations.some((r) => r.methodology.id === m.id),
-        ).map((m) => (
-          <Pressable
-            key={m.id}
-            style={({ pressed }) => [styles.miniCard, pressed && styles.cardPressed]}
-            onPress={() => onPickRecommended(m.id)}
-          >
-            <Text style={styles.miniCardText}>
-              {LIFECYCLE_EMOJI[m.lifecyclePhase]} {m.name}（{LIFECYCLE_LABEL[m.lifecyclePhase]}）
-            </Text>
-          </Pressable>
-        ))}
-
-        <Pressable onPress={() => setStep('quiz')} style={styles.skipBtn}>
-          <Text style={styles.skipText}>← 回去重答問題</Text>
+        <Pressable onPress={() => setStep('quiz')} style={styles.advLink}>
+          <Text style={styles.advLinkText}>← 重答問題</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -295,33 +353,128 @@ export function OnboardingScreen({ onDone }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
-  stepHint: { fontSize: 12, color: colors.textMuted, marginTop: 8, marginBottom: 6 },
-  title: {
-    fontSize: 24,
+
+  // Welcome (Step 1)
+  brand: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginTop: 24,
+  },
+  heroTitle: {
+    fontSize: 32,
     fontWeight: '800',
     color: colors.text,
+    marginTop: 8,
+  },
+  heroSub: {
+    fontSize: 15,
+    color: colors.textMuted,
+    marginTop: 8,
+    marginBottom: 28,
+    lineHeight: 22,
+  },
+  heroCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 18,
+    marginBottom: 10,
+    gap: 14,
+  },
+  heroEmoji: { fontSize: 28 },
+  heroCardTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
+  heroCardSub: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  heroChevron: { fontSize: 22, color: colors.textMuted, fontWeight: '300' },
+
+  // Confirm (Step 2)
+  backLink: { alignSelf: 'flex-start', paddingVertical: 8, marginBottom: 12 },
+  backLinkText: { fontSize: 14, color: colors.textMuted },
+  confirmHello: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  confirmHeadline: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  confirmAuthor: { fontSize: 13, color: colors.textMuted, marginBottom: 12 },
+  confirmDesc: { fontSize: 14, color: colors.text, lineHeight: 22, marginBottom: 24 },
+
+  // CTA (主動作)
+  cta: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  ctaPressed: { opacity: 0.85 },
+  ctaText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+
+  // Alternatives (同階段其他派)
+  altTitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '600',
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  altCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textMuted,
-    lineHeight: 21,
-    marginBottom: 24,
-  },
-  questionText: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: colors.text,
+  altName: { fontSize: 15, fontWeight: '700', color: colors.text },
+  altDesc: { fontSize: 12, color: colors.textMuted, marginTop: 4, lineHeight: 17 },
+
+  // Advanced link (進 quiz)
+  advLink: {
+    paddingVertical: 14,
+    alignItems: 'center',
     marginTop: 12,
-    marginBottom: 4,
-    lineHeight: 26,
   },
-  questionAxis: { fontSize: 12, color: colors.textMuted, marginBottom: 18 },
-  progressBar: {
-    flexDirection: 'row',
-    gap: 6,
+  advLinkText: {
+    fontSize: 13,
+    color: colors.textMuted,
+    textDecorationLine: 'underline',
+  },
+
+  // Skip (最不顯眼)
+  skipBtn: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  skipText: { fontSize: 13, color: colors.textMuted },
+
+  // Severe warning
+  warningCard: {
+    backgroundColor: '#fff4e1',
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#e67e22',
+    padding: 14,
     marginBottom: 16,
   },
+  warningText: { fontSize: 13, color: '#5a3a0a', lineHeight: 20 },
+
+  // Card press state
+  cardPressed: { opacity: 0.85, backgroundColor: colors.card },
+
+  // Quiz
+  progressBar: { flexDirection: 'row', gap: 6, marginBottom: 20 },
   progressDot: {
     flex: 1,
     height: 4,
@@ -329,92 +482,47 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   progressDotActive: { backgroundColor: colors.primary },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardSuggested: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-    backgroundColor: colors.card,
-  },
-  cardPressed: { opacity: 0.85, backgroundColor: colors.card },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardEmoji: { fontSize: 32 },
-  cardPhase: {
-    fontSize: 16,
+  questionText: {
+    fontSize: 22,
     fontWeight: '700',
     color: colors.text,
-  },
-  cardQuestion: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  cardDesc: {
-    fontSize: 13,
-    color: colors.text,
-    lineHeight: 19,
-    marginTop: 10,
+    marginBottom: 18,
+    lineHeight: 30,
   },
   optionCard: {
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 14,
+    padding: 16,
     marginBottom: 10,
   },
-  optionLabel: { fontSize: 14, color: colors.text, lineHeight: 21 },
-  miniCard: {
+  optionLabel: { fontSize: 15, color: colors.text, lineHeight: 22 },
+
+  // Recommendations
+  recCard: {
     backgroundColor: colors.surface,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    padding: 16,
+    marginBottom: 10,
+  },
+  recCardTop: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+    backgroundColor: colors.card,
+  },
+  recBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.primary,
     marginBottom: 6,
+    letterSpacing: 0.5,
   },
-  miniCardText: { fontSize: 13, color: colors.text },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 16,
-  },
-  expandHint: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: 8,
-  },
-  warningCard: {
-    backgroundColor: '#fff4e1',
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#e67e22',
-    padding: 14,
-  },
-  warningText: {
-    fontSize: 13,
-    color: '#5a3a0a',
-    lineHeight: 20,
-  },
-  empty: {
-    textAlign: 'center',
-    color: colors.textMuted,
-    padding: 20,
-  },
-  skipBtn: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  skipText: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textDecorationLine: 'underline',
-  },
+  recName: { fontSize: 17, fontWeight: '700', color: colors.text },
+  recMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  recDesc: { fontSize: 13, color: colors.text, marginTop: 8, lineHeight: 19 },
+
+  empty: { textAlign: 'center', color: colors.textMuted, padding: 20 },
 });
