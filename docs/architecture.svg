@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1200 1700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3D2F1F"/>
+    </marker>
+    <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4F8A6E"/>
+    </marker>
+    <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C8821A"/>
+    </marker>
+  </defs>
+  <style>
+    .bg     { fill:#FFF8EE; }
+    .text   { fill:#3D2F1F; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC','PingFang TC',sans-serif; }
+    .title  { font-size:30px; font-weight:900; }
+    .sub    { fill:#8A7A60; font-size:12px; font-weight:500; }
+    .sect   { font-size:20px; font-weight:800; }
+    .lbl    { font-size:14px; font-weight:700; }
+    .lblS   { font-size:12px; font-weight:700; }
+    .small  { font-size:10px; font-weight:500; fill:#5C4D38; }
+    .hero   { fill:#DEF0E5; stroke:#4F8A6E; stroke-width:2.4; }
+    .heroT  { fill:#4F8A6E; font-size:10px; font-weight:800; }
+    .sup    { fill:#FFFFFF; stroke:#E8D9BD; stroke-width:1.4; }
+    .byp    { fill:#F7EFE0; stroke:#B8A98E; stroke-width:1.4; stroke-dasharray:5,3; }
+    .store  { fill:#FFF3DD; stroke:#C8821A; stroke-width:1.4; }
+    .ai     { fill:#FFF3DD; stroke:#C8821A; stroke-width:2; }
+    .arr    { stroke:#3D2F1F; stroke-width:1.6; fill:none; }
+    .arrG   { stroke:#4F8A6E; stroke-width:2.4; fill:none; }
+    .arrA   { stroke:#C8821A; stroke-width:2; fill:none; }
+    .pill   { fill:#C8821A; }
+    .pillT  { fill:#FFFFFF; font-size:10px; font-weight:800; }
+  </style>
+
+  <rect class="bg" width="1200" height="1700"/>
+
+  <!-- ============== Title ============== -->
+  <text class="text title" x="600" y="44" text-anchor="middle">Amber Stash · App Framework</text>
+  <text class="text sub"   x="600" y="64" text-anchor="middle">分層架構 + 四角飛輪 + Magic Moment</text>
+
+  <!-- ============== SECTION 1: Architecture ============== -->
+  <text class="text sect" x="40" y="105">1 · 分層架構（User → UI → Service → Storage → AI Backend）</text>
+
+  <!-- User -->
+  <rect class="sup" x="535" y="125" width="130" height="36" rx="18"/>
+  <text class="text lbl" x="600" y="148" text-anchor="middle">USER opens app</text>
+  <line class="arr" x1="600" y1="161" x2="600" y2="190" marker-end="url(#arr)"/>
+
+  <!-- Onboarding -->
+  <rect class="sup" x="370" y="195" width="460" height="60" rx="12"/>
+  <text class="text lbl" x="600" y="220" text-anchor="middle">Onboarding (first launch only)</text>
+  <text class="text sub" x="600" y="240" text-anchor="middle">Welcome → Pick Methodology → Load demo / Start fresh</text>
+  <line class="arr" x1="600" y1="256" x2="600" y2="285" marker-end="url(#arr)"/>
+
+  <!-- 6 Tabs row -->
+  <text class="text sub" x="600" y="282" text-anchor="middle">6 Bottom Tabs</text>
+
+  <!-- Tab 0 Items (byproduct) -->
+  <rect class="byp" x="60"  y="295" width="170" height="70" rx="10"/>
+  <text class="text lbl" x="145" y="320" text-anchor="middle">📦 Items</text>
+  <text class="text small" x="145" y="340" text-anchor="middle">byproduct (inventory)</text>
+  <text class="text small" x="145" y="355" text-anchor="middle">「我家有什麼」</text>
+
+  <!-- Tab 1 Spaces -->
+  <rect class="sup" x="242" y="295" width="170" height="70" rx="10"/>
+  <text class="text lbl" x="327" y="320" text-anchor="middle">🗄 Spaces</text>
+  <text class="text small" x="327" y="340" text-anchor="middle">support</text>
+  <text class="text small" x="327" y="355" text-anchor="middle">snapshot 的容器</text>
+
+  <!-- Tab 2 Labels (HERO 3) -->
+  <rect class="hero" x="424" y="295" width="170" height="70" rx="10"/>
+  <rect class="pill" x="430" y="299" width="46" height="14" rx="7"/>
+  <text class="pillT" x="453" y="310" text-anchor="middle">HERO 3</text>
+  <text class="text lbl" x="509" y="335" text-anchor="middle">🏷 Labels</text>
+  <text class="text small" x="509" y="354" text-anchor="middle">印貼紙 / 雷雕</text>
+
+  <!-- Tab 3 Suggestions (HERO 2) -->
+  <rect class="hero" x="606" y="295" width="170" height="70" rx="10"/>
+  <rect class="pill" x="612" y="299" width="46" height="14" rx="7"/>
+  <text class="pillT" x="635" y="310" text-anchor="middle">HERO 2</text>
+  <text class="text lbl" x="691" y="335" text-anchor="middle">💡 Suggestions</text>
+  <text class="text small" x="691" y="354" text-anchor="middle">AI 收納顧問</text>
+
+  <!-- Tab 4 Shop -->
+  <rect class="sup" x="788" y="295" width="170" height="70" rx="10"/>
+  <text class="text lbl" x="873" y="320" text-anchor="middle">🛒 Shop</text>
+  <text class="text small" x="873" y="340" text-anchor="middle">support</text>
+  <text class="text small" x="873" y="355" text-anchor="middle">該買的箱子</text>
+
+  <!-- Tab 5 Settings -->
+  <rect class="sup" x="970" y="295" width="170" height="70" rx="10"/>
+  <text class="text lbl" x="1055" y="320" text-anchor="middle">⚙ Settings</text>
+  <text class="text small" x="1055" y="340" text-anchor="middle">support</text>
+  <text class="text small" x="1055" y="355" text-anchor="middle">backend / 方法論</text>
+
+  <!-- Arrow from Items tab to AddItem -->
+  <line class="arr" x1="145" y1="365" x2="145" y2="400" marker-end="url(#arr)"/>
+  <text class="text small" x="155" y="388" text-anchor="start">tap + Add</text>
+
+  <!-- ============== HERO 1 AddItem container ============== -->
+  <rect class="hero" x="40" y="405" width="800" height="170" rx="14"/>
+  <rect class="pill" x="55" y="412" width="46" height="14" rx="7"/>
+  <text class="pillT" x="78" y="423" text-anchor="middle">HERO 1</text>
+  <text class="text lbl" x="450" y="423" text-anchor="middle">AddItem flow · photo → inventory</text>
+
+  <!-- 4 sub-boxes -->
+  <rect class="sup" x="60"  y="445" width="170" height="60" rx="10"/>
+  <text class="text lblS" x="145" y="470" text-anchor="middle">CaptureStep</text>
+  <text class="text small" x="145" y="490" text-anchor="middle">+ QuotaPill header</text>
+
+  <rect class="sup" x="248" y="445" width="170" height="60" rx="10"/>
+  <text class="text lblS" x="333" y="470" text-anchor="middle">CameraStep</text>
+  <text class="text small" x="333" y="490" text-anchor="middle">拍照 / 相簿選</text>
+
+  <rect class="ai"  x="436" y="445" width="170" height="60" rx="10"/>
+  <text class="text lblS" x="521" y="470" text-anchor="middle">AI Recognize</text>
+  <text class="text small" x="521" y="490" text-anchor="middle">3-tier backend</text>
+
+  <rect class="sup" x="624" y="445" width="200" height="60" rx="10"/>
+  <text class="text lblS" x="724" y="470" text-anchor="middle">ReviewStep</text>
+  <text class="text small" x="724" y="490" text-anchor="middle">低信心 gating / bbox edit / container dlg</text>
+
+  <!-- arrows between sub-boxes -->
+  <line class="arr" x1="230" y1="475" x2="248" y2="475" marker-end="url(#arr)"/>
+  <line class="arr" x1="418" y1="475" x2="436" y2="475" marker-end="url(#arr)"/>
+  <line class="arr" x1="606" y1="475" x2="624" y2="475" marker-end="url(#arr)"/>
+
+  <text class="text small" x="450" y="540" text-anchor="middle">commit ↓ snapshot</text>
+  <line class="arr" x1="450" y1="545" x2="450" y2="595" marker-end="url(#arr)"/>
+
+  <!-- AI Backend (right side, parallel to AddItem) -->
+  <rect class="ai" x="880" y="405" width="280" height="170" rx="14"/>
+  <text class="text lbl" x="1020" y="425" text-anchor="middle">AI Backend (3-tier)</text>
+  <text class="text small" x="1020" y="443" text-anchor="middle">proxy → direct → mock</text>
+  <line class="arrA" x1="900" y1="455" x2="1140" y2="455"/>
+  <text class="text small" x="1020" y="478" text-anchor="middle">server/ · Cloudflare Worker</text>
+  <text class="text small" x="1020" y="495" text-anchor="middle">· KV quota · rate limit</text>
+  <text class="text small" x="1020" y="512" text-anchor="middle">· Stripe webhook</text>
+  <line class="arrA" x1="1020" y1="530" x2="1020" y2="548" marker-end="url(#arrA)"/>
+  <text class="text small" x="1020" y="562" text-anchor="middle">Anthropic API · Sonnet 4.6</text>
+
+  <line class="arrA" x1="870" y1="475" x2="616" y2="475" stroke-dasharray="6,4"/>
+  <text class="text small" x="743" y="467" text-anchor="middle" fill="#C8821A">photo bytes / detections</text>
+
+  <!-- SpaceSnapshot -->
+  <rect class="store" x="320" y="600" width="260" height="60" rx="12"/>
+  <text class="text lbl" x="450" y="624" text-anchor="middle">SpaceSnapshot</text>
+  <text class="text small" x="450" y="644" text-anchor="middle">immutable · per space · 防重複計算</text>
+  <line class="arr" x1="450" y1="660" x2="450" y2="695" marker-end="url(#arr)"/>
+
+  <!-- Methodology Engine -->
+  <rect class="store" x="260" y="700" width="380" height="60" rx="12"/>
+  <text class="text lbl" x="450" y="724" text-anchor="middle">Methodology Engine</text>
+  <text class="text small" x="450" y="744" text-anchor="middle">rule evaluator + template fill · per active methodology</text>
+
+  <!-- 3 outputs from engine -->
+  <line class="arrG" x1="320" y1="760" x2="180" y2="800" marker-end="url(#arrG)"/>
+  <line class="arrG" x1="450" y1="760" x2="450" y2="800" marker-end="url(#arrG)"/>
+  <line class="arrG" x1="580" y1="760" x2="720" y2="800" marker-end="url(#arrG)"/>
+
+  <rect class="hero" x="60"  y="805" width="240" height="60" rx="10"/>
+  <text class="text lblS" x="180" y="830" text-anchor="middle">AI Advice cards</text>
+  <text class="text small" x="180" y="850" text-anchor="middle">→ Suggestions tab (HERO 2)</text>
+
+  <rect class="sup" x="330" y="805" width="240" height="60" rx="10"/>
+  <text class="text lblS" x="450" y="830" text-anchor="middle">Shopping picks</text>
+  <text class="text small" x="450" y="850" text-anchor="middle">→ Shop tab (support)</text>
+
+  <rect class="hero" x="600" y="805" width="240" height="60" rx="10"/>
+  <text class="text lblS" x="720" y="830" text-anchor="middle">Box recommender</text>
+  <text class="text small" x="720" y="850" text-anchor="middle">→ HERO 3: box / svgOutline</text>
+
+  <!-- Storage layer -->
+  <rect class="store" x="40" y="900" width="1120" height="70" rx="12"/>
+  <text class="text lbl" x="600" y="924" text-anchor="middle">Storage layer (AsyncStorage)</text>
+  <text class="text small" x="600" y="945" text-anchor="middle">items · spaces · sessions · snapshots · shopping · preferences · onboarding · boxOrders · ai-quota</text>
+  <text class="text small" x="600" y="962" text-anchor="middle">未來 M8 換實作為 Supabase Postgres（介面抽象已備）</text>
+
+  <!-- Hero 3 detail box (separate from engine output) -->
+  <rect class="hero" x="40" y="1000" width="1120" height="80" rx="12"/>
+  <rect class="pill" x="55" y="1007" width="46" height="14" rx="7"/>
+  <text class="pillT" x="78" y="1018" text-anchor="middle">HERO 3</text>
+  <text class="text lbl" x="600" y="1018" text-anchor="middle">客製收納箱 · Box engineering</text>
+  <text class="text small" x="600" y="1041" text-anchor="middle">box/catalog (13 SKU) · box/recommender (space + items → SKU) · box/svgOutline (vector for laser engraving)</text>
+  <text class="text small" x="600" y="1060" text-anchor="middle">labelHtml (印貼紙 PDF) ── 同一份資料兩種輸出 ──→ svgOutline (雷雕路徑)</text>
+
+  <!-- ============== SECTION 2: Flywheel ============== -->
+  <text class="text sect" x="40" y="1135">2 · 四角飛輪 · The Strategic Flywheel</text>
+
+  <!-- Top: User Data -->
+  <rect class="store" x="490" y="1170" width="220" height="60" rx="12"/>
+  <text class="text lbl" x="600" y="1194" text-anchor="middle">USER DATA</text>
+  <text class="text small" x="600" y="1214" text-anchor="middle">free entry · inventory moat</text>
+
+  <!-- Left: Methodologies -->
+  <rect class="sup" x="180" y="1290" width="220" height="60" rx="12"/>
+  <text class="text lbl" x="290" y="1314" text-anchor="middle">METHODOLOGIES</text>
+  <text class="text small" x="290" y="1334" text-anchor="middle">experts · subscription</text>
+
+  <!-- Right: AI Advisor -->
+  <rect class="hero" x="800" y="1290" width="220" height="60" rx="12"/>
+  <text class="text lbl" x="910" y="1314" text-anchor="middle">AI ADVISOR</text>
+  <text class="text small" x="910" y="1334" text-anchor="middle">HERO 2 · subscription</text>
+
+  <!-- Bottom: Custom Boxes -->
+  <rect class="hero" x="490" y="1410" width="220" height="60" rx="12"/>
+  <text class="text lbl" x="600" y="1434" text-anchor="middle">CUSTOM BOXES</text>
+  <text class="text small" x="600" y="1454" text-anchor="middle">HERO 3 · direct sales</text>
+
+  <!-- Flywheel arrows -->
+  <!-- User → AI (right) -->
+  <path class="arr" d="M 660 1230 Q 800 1260 870 1290" marker-end="url(#arr)"/>
+  <text class="text small" x="800" y="1248" fill="#3D2F1F">feeds</text>
+  <!-- AI → Boxes (down) -->
+  <path class="arr" d="M 890 1350 Q 800 1390 700 1420" marker-end="url(#arr)"/>
+  <text class="text small" x="828" y="1390" fill="#3D2F1F">recommends</text>
+  <!-- Boxes → User (left up via QR returns) -->
+  <path class="arr" d="M 540 1410 Q 380 1380 380 1290" marker-end="url(#arr)" stroke-dasharray="6,4"/>
+  <text class="text small" x="360" y="1370" fill="#3D2F1F">QR returns data</text>
+  <!-- Methods ↔ AI (horizontal middle) -->
+  <line class="arrG" x1="400" y1="1320" x2="800" y2="1320" marker-end="url(#arrG)"/>
+  <line class="arrG" x1="800" y1="1320" x2="400" y2="1320" marker-start="url(#arrG)"/>
+  <text class="text small" x="600" y="1308" text-anchor="middle" fill="#4F8A6E">tunes ⇄ drives</text>
+  <!-- User → Methods (left down) -->
+  <path class="arr" d="M 540 1230 Q 380 1260 320 1290" marker-end="url(#arr)"/>
+  <text class="text small" x="380" y="1248">informs</text>
+  <!-- Methods → Boxes (licenses) -->
+  <path class="arr" d="M 350 1350 Q 450 1390 540 1420" marker-end="url(#arr)" stroke-dasharray="6,4"/>
+  <text class="text small" x="395" y="1390">licenses</text>
+
+  <!-- ============== SECTION 3: Magic Moment ============== -->
+  <text class="text sect" x="40" y="1525">3 · Magic Moment · 3 分鐘體驗</text>
+
+  <rect class="hero" x="80" y="1545" width="320" height="100" rx="12"/>
+  <text class="text lbl" x="240" y="1572" text-anchor="middle">STEP 1 · 拍 10 張照片</text>
+  <text class="text small" x="240" y="1593" text-anchor="middle">HERO 1 · 拍照即建檔</text>
+  <text class="text small" x="240" y="1612" text-anchor="middle">「I get it」 — 資料</text>
+  <text class="text small" x="240" y="1631" text-anchor="middle">capture session → snapshot</text>
+
+  <line class="arrG" x1="410" y1="1595" x2="438" y2="1595" marker-end="url(#arrG)"/>
+
+  <rect class="hero" x="440" y="1545" width="320" height="100" rx="12"/>
+  <text class="text lbl" x="600" y="1572" text-anchor="middle">STEP 2 · AI 套用方法論</text>
+  <text class="text small" x="600" y="1593" text-anchor="middle">HERO 2 · AI 收納顧問</text>
+  <text class="text small" x="600" y="1612" text-anchor="middle">「I help you」 — 洞察</text>
+  <text class="text small" x="600" y="1631" text-anchor="middle">engine + active methodology</text>
+
+  <line class="arrG" x1="770" y1="1595" x2="798" y2="1595" marker-end="url(#arrG)"/>
+
+  <rect class="hero" x="800" y="1545" width="320" height="100" rx="12"/>
+  <text class="text lbl" x="960" y="1572" text-anchor="middle">STEP 3 · 收到方案 + 該買的箱子</text>
+  <text class="text small" x="960" y="1593" text-anchor="middle">HERO 3 · 客製收納箱</text>
+  <text class="text small" x="960" y="1612" text-anchor="middle">「I sell to you」 — 商品</text>
+  <text class="text small" x="960" y="1631" text-anchor="middle">recommender + svgOutline</text>
+
+  <!-- legend -->
+  <text class="text small" x="40" y="1680" font-style="italic">Legend：</text>
+  <rect class="hero" x="100" y="1670" width="14" height="14" rx="3"/>
+  <text class="text small" x="120" y="1681">HERO</text>
+  <rect class="sup"  x="170" y="1670" width="14" height="14" rx="3"/>
+  <text class="text small" x="190" y="1681">support</text>
+  <rect class="byp"  x="245" y="1670" width="14" height="14" rx="3"/>
+  <text class="text small" x="265" y="1681">byproduct</text>
+  <rect class="store" x="335" y="1670" width="14" height="14" rx="3"/>
+  <text class="text small" x="355" y="1681">storage / data</text>
+  <rect class="ai"   x="450" y="1670" width="14" height="14" rx="3"/>
+  <text class="text small" x="470" y="1681">AI backend</text>
+</svg>
