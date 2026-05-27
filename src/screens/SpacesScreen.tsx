@@ -130,25 +130,37 @@ export function SpacesScreen() {
             <Text style={styles.emptyText}>還沒有空間。先建一個衣櫃或抽屜試試。</Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.row}
-            onLongPress={async () => {
-              await deleteSpace(item.id);
-              setSpaces((prev) => prev?.filter((s) => s.id !== item.id) ?? null);
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowTitle}>{item.name}</Text>
-              <Text style={styles.rowMeta}>
-                {SPACE_LABEL[item.kind]}
-                {item.widthCm && item.heightCm && item.depthCm
-                  ? ` · ${item.widthCm}×${item.heightCm}×${item.depthCm} cm`
-                  : ''}
-              </Text>
-            </View>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const onDelete = async () => {
+            await deleteSpace(item.id);
+            setSpaces((prev) => prev?.filter((s) => s.id !== item.id) ?? null);
+          };
+          return (
+            <Pressable style={styles.row} onLongPress={onDelete}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowTitle}>{item.name}</Text>
+                <Text style={styles.rowMeta}>
+                  {SPACE_LABEL[item.kind]}
+                  {item.widthCm && item.heightCm && item.depthCm
+                    ? ` · ${item.widthCm}×${item.heightCm}×${item.depthCm} cm`
+                    : ''}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  Alert.alert('刪除這個空間？', item.name, [
+                    { text: '取消', style: 'cancel' },
+                    { text: '刪除', style: 'destructive', onPress: onDelete },
+                  ]);
+                }}
+                style={styles.delBtn}
+                hitSlop={8}
+              >
+                <Text style={styles.delBtnText}>✕</Text>
+              </Pressable>
+            </Pressable>
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -211,4 +223,14 @@ const styles = StyleSheet.create({
   rowMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: 30 },
   emptyText: { color: colors.textMuted },
+  delBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+    marginLeft: 8,
+  },
+  delBtnText: { fontSize: 14, color: colors.textMuted, fontWeight: '700' },
 });
