@@ -35,9 +35,15 @@ export type FixtureScenario = {
   spaceKind?: SpaceKind;
   detections: Detection[];
   /**
-   * 預先打包的展示照片 — Metro `require()` 出來的 asset module ID。
-   * fixture picker 顯示縮圖、或載入後當 mock「剛拍到的畫面」用。
-   * 沒對應照片的 scenario（例如低信心測試）可留 undefined。
+   * 此 scenario 對應的展示照片變化池（Unsplash CDN base URL，無 query string）。
+   * fixture picker 每次打開會從這個 pool 隨機抽一張當代表照片。
+   * `pickPhotoUrl(scenario)` helper 會挑一張並補上尺寸 query string。
    */
-  photo?: number;
+  photos: string[];
+  /**
+   * listFixtures() 回傳時，這次抽中的代表照片完整 URL（含 query string）。
+   * Modal 縮圖跟載入後 photoBox 顯示同一張，保持視覺一致。
+   * 沒對應照片的 scenario 為 undefined。
+   */
+  pickedPhotoUrl?: string;
 };
