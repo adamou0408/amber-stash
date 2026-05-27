@@ -1,0 +1,24 @@
+{
+  "name": "amber-stash-ai-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Amber Stash 自架 AI proxy — 把 Anthropic key 留在 server，client 走這層。",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.19.2",
+    "typescript": "~5.9.2",
+    "vitest": "^2.1.8"
+  }
+}

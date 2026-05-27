@@ -11,8 +11,6 @@ module.exports = {
     '^@react-native-async-storage/async-storage$':
       '<rootDir>/src/__test_mocks__/asyncStorage.ts',
     '^expo-constants$': '<rootDir>/src/__test_mocks__/expoConstants.ts',
-    // 把 binary asset require (圖片等) stub 掉 — Metro 真實環境會回 module id (number)
-    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/src/__test_mocks__/imageAsset.ts',
   },
   transform: {
     '^.+\\.tsx?$': [

@@ -19,24 +19,24 @@ type RawScenario = {
   description?: string;
   spaceKind?: SpaceKind;
   detections: RawDetection[];
+  photos?: string[];
 };
 
 type RawFixtures = { scenarios: RawScenario[] };
 
 const VALID_CATEGORIES = new Set<string>(Object.keys(CATEGORY_LABEL));
 
-/**
- * Scenario id → asset module。
- * 用靜態 require 因為 Metro 不支援動態字串路徑。
- * 沒列在這裡的 scenario（例如 low-confidence-mix）就走 undefined，picker 內不顯示縮圖。
- * 照片來源見 assets/fixtures/ATTRIBUTION.md。
- */
-const FIXTURE_PHOTOS: Record<string, number> = {
-  'wardrobe-clothing': require('../../../assets/fixtures/wardrobe-clothing.jpg'),
-  'desk-stationery': require('../../../assets/fixtures/desk-stationery.jpg'),
-  'drawer-electronics': require('../../../assets/fixtures/drawer-electronics.jpg'),
-  'kitchen-storage': require('../../../assets/fixtures/kitchen-storage.jpg'),
-};
+/** 從 Unsplash CDN base URL 補上想要的尺寸 / 品質 query string。 */
+export function buildPhotoUrl(baseUrl: string, width: number = 1080): string {
+  return `${baseUrl}?fm=jpg&q=75&w=${width}&auto=format&fit=crop`;
+}
+
+/** 從 photos pool 隨機抽一張完整 URL。pool 為空回 undefined。 */
+function pickRandom(photos: string[] | undefined, width: number = 1080): string | undefined {
+  if (!photos || photos.length === 0) return undefined;
+  const idx = Math.floor(Math.random() * photos.length);
+  return buildPhotoUrl(photos[idx]!, width);
+}
 
 function materialize(raw: RawScenario): FixtureScenario {
   const detections = raw.detections
@@ -58,11 +58,17 @@ function materialize(raw: RawScenario): FixtureScenario {
     description: raw.description,
     spaceKind: raw.spaceKind,
     detections,
-    photo: FIXTURE_PHOTOS[raw.id],
+    photos: raw.photos ?? [],
+    pickedPhotoUrl: pickRandom(raw.photos),
   };
 }
 
-/** 回傳所有可用的 fixture（每次 call 都會生新 UUID — 每次選擇都是獨立 batch）。 */
+/**
+ * 回傳所有可用的 fixture。
+ * 每次 call 都會：
+ *   - 為 detections 生新 UUID（讓每次選擇都是獨立 batch）
+ *   - 從 photos pool 隨機抽一張當 pickedPhotoUrl（讓 picker 每次打開看到不同的代表照片）
+ */
 export function listFixtures(): FixtureScenario[] {
   return (fixturesRaw as RawFixtures).scenarios.map(materialize);
 }
@@ -73,6 +79,7 @@ export function loadFixture(id: string): DetectionSourceResult | null {
   if (!scenario) return null;
   return {
     detections: scenario.detections,
+    photoUri: scenario.pickedPhotoUrl,
     meta: { backend: 'fixture' },
   };
 }
