@@ -1,27 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEFAULT_METHODOLOGY } from '@/services/methodologies/default';
+import { repositories } from './repositories';
+import type { UserPreferences } from './repositories';
 
-const KEY = 'amberstash.preferences.v1';
+/**
+ * Thin shim — delegate 到 repositories.preferences。
+ * 保留原本 named export 介面（含 UserPreferences 型別 re-export），既有 import 0 改動。
+ */
+export type { UserPreferences };
 
-export type UserPreferences = {
-  activeMethodologyId: string;
-};
+export const loadPreferences = (): Promise<UserPreferences> =>
+  repositories.preferences.loadPreferences();
 
-const DEFAULTS: UserPreferences = {
-  activeMethodologyId: DEFAULT_METHODOLOGY.id,
-};
-
-export async function loadPreferences(): Promise<UserPreferences> {
-  const raw = await AsyncStorage.getItem(KEY);
-  if (!raw) return DEFAULTS;
-  try {
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<UserPreferences>) };
-  } catch {
-    return DEFAULTS;
-  }
-}
-
-export async function setActiveMethodology(id: string): Promise<void> {
-  const prev = await loadPreferences();
-  await AsyncStorage.setItem(KEY, JSON.stringify({ ...prev, activeMethodologyId: id }));
-}
+export const setActiveMethodology = (id: string): Promise<void> =>
+  repositories.preferences.setActiveMethodology(id);
