@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -31,6 +32,7 @@ import { detectAnomalies } from '@/services/anomaly';
 import { recognizeItems } from '@/services/ai/recognizeItems';
 import { QuotaExceededError } from '@/services/ai/quota';
 import { getActiveBackend } from '@/services/ai/config';
+import { listFixtures, type FixtureScenario } from '@/services/detectionSource';
 import type { ItemsStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<ItemsStackParamList, 'AddItem'>;
@@ -65,6 +67,12 @@ export function AddItemScreen({ navigation }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
 
+  // ---------- fixture picker (dev / web 用，跳過相機直接注入假資料) ----------
+  const [fixturePickerOpen, setFixturePickerOpen] = useState(false);
+  const fixtures = useMemo<FixtureScenario[]>(() => listFixtures(), []);
+  /** 載入 fixture 時記錄它的展示照片（Metro asset module ID），讓 photoBox 也顯示出來。 */
+  const [fixturePhoto, setFixturePhoto] = useState<number | undefined>();
+
   useEffect(() => {
     loadSpaces().then(setSpaces);
   }, []);
@@ -88,6 +96,7 @@ export function AddItemScreen({ navigation }: Props) {
     if (photo?.uri) {
       setPhotoUri(photo.uri);
       setPhotoBase64(photo.base64);
+      setFixturePhoto(undefined);
       setCameraOpen(false);
       setAiHint(undefined);
     }
@@ -102,8 +111,29 @@ export function AddItemScreen({ navigation }: Props) {
     if (!result.canceled && result.assets[0]) {
       setPhotoUri(result.assets[0].uri);
       setPhotoBase64(result.assets[0].base64 ?? undefined);
+      setFixturePhoto(undefined);
       setAiHint(undefined);
     }
+  }
+
+  /**
+   * 從 fixture 注入 detections — 跳過相機 + AI。
+   * 給 Chrome 模擬手機開發用：不用真的拍照、不用真的打 API。
+   */
+  function onPickFixture(scenario: FixtureScenario) {
+    if (!spaceId) {
+      Alert.alert('請先選空間', 'Fixture 結果會進到 session，要先指定空間。');
+      return;
+    }
+    setFixturePickerOpen(false);
+    setPendings((prev) => [...scenario.detections, ...prev]);
+    // 用 fixture 的展示照片取代 photoBox（真實相機 / 相簿來源優先，這裡走 fallback）
+    setPhotoUri(undefined);
+    setPhotoBase64(undefined);
+    setFixturePhoto(scenario.photo);
+    const lowConf = scenario.detections.filter((d) => d.confidence < 0.6).length;
+    const lowConfLabel = lowConf > 0 ? ` · ${lowConf} 筆低信心` : '';
+    setAiHint(`✓ 載入 fixture「${scenario.label}」（${scenario.detections.length} 筆）${lowConfLabel}`);
   }
 
   async function onRecognize() {
@@ -150,6 +180,7 @@ export function AddItemScreen({ navigation }: Props) {
     setNote('');
     setPhotoUri(undefined);
     setPhotoBase64(undefined);
+    setFixturePhoto(undefined);
   }
 
   /**
@@ -313,6 +344,8 @@ export function AddItemScreen({ navigation }: Props) {
         <View style={styles.photoBox}>
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} />
+          ) : fixturePhoto ? (
+            <Image source={fixturePhoto} style={styles.photo} />
           ) : (
             <Text style={styles.photoHint}>還沒有照片</Text>
           )}
@@ -321,6 +354,15 @@ export function AddItemScreen({ navigation }: Props) {
           <Button title="拍照" onPress={openCamera} style={styles.rowBtn} />
           <Button title="從相簿選" variant="secondary" onPress={pickFromLibrary} style={styles.rowBtn} />
         </View>
+
+        {__DEV__ ? (
+          <Pressable
+            onPress={() => setFixturePickerOpen(true)}
+            style={styles.fixtureBtn}
+          >
+            <Text style={styles.fixtureBtnText}>📋 載入測試 fixture（跳過相機 / AI）</Text>
+          </Pressable>
+        ) : null}
 
         {photoUri ? (
           <View style={styles.aiBox}>
@@ -419,16 +461,20 @@ export function AddItemScreen({ navigation }: Props) {
           <View style={styles.pendingList}>
             <Text style={styles.pendingHeader}>本次 session 已加入 {pendings.length} 筆</Text>
             {pendings.map((p) => (
-              <Pressable
-                key={p.id}
-                onLongPress={() => onRemovePending(p.id)}
-                style={styles.pendingItem}
-              >
-                <Text style={styles.pendingItemText}>
-                  {p.name} · {CATEGORY_LABEL[p.category]} × {p.quantity}
-                </Text>
-                <Text style={styles.pendingItemHint}>長按移除</Text>
-              </Pressable>
+              <View key={p.id} style={styles.pendingItem}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.pendingItemText}>
+                    {p.name} · {CATEGORY_LABEL[p.category]} × {p.quantity}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => onRemovePending(p.id)}
+                  style={styles.pendingDelBtn}
+                  hitSlop={8}
+                >
+                  <Text style={styles.pendingDelBtnText}>✕</Text>
+                </Pressable>
+              </View>
             ))}
           </View>
         )}
@@ -447,6 +493,55 @@ export function AddItemScreen({ navigation }: Props) {
           <Button title="儲存" onPress={onQuickSaveLegacy} style={{ marginTop: 16 }} />
         )}
       </ScrollView>
+
+      <Modal
+        visible={fixturePickerOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setFixturePickerOpen(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setFixturePickerOpen(false)}
+        >
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>選擇一份測試 fixture</Text>
+            <Text style={styles.modalSubtitle}>
+              直接注入 detections 進 session，不用拍照、不打 AI API。
+            </Text>
+            <ScrollView style={styles.fixtureList}>
+              {fixtures.map((f) => (
+                <Pressable
+                  key={f.id}
+                  onPress={() => onPickFixture(f)}
+                  style={styles.fixtureRow}
+                >
+                  {f.photo ? (
+                    <Image source={f.photo} style={styles.fixtureThumb} />
+                  ) : (
+                    <View style={[styles.fixtureThumb, styles.fixtureThumbEmpty]}>
+                      <Text style={styles.photoHint}>無照片</Text>
+                    </View>
+                  )}
+                  <View style={styles.fixtureBody}>
+                    <Text style={styles.fixtureLabel}>{f.label}</Text>
+                    {f.description ? (
+                      <Text style={styles.fixtureDesc}>{f.description}</Text>
+                    ) : null}
+                    <Text style={styles.fixtureMeta}>{f.detections.length} 筆 detection</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+            <Button
+              title="取消"
+              variant="secondary"
+              onPress={() => setFixturePickerOpen(false)}
+              style={{ marginTop: 12 }}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -514,12 +609,24 @@ const styles = StyleSheet.create({
   },
   pendingHeader: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 8 },
   pendingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderColor: colors.border,
   },
   pendingItemText: { fontSize: 13, color: colors.text },
   pendingItemHint: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  pendingDelBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+    marginLeft: 8,
+  },
+  pendingDelBtnText: { fontSize: 12, color: colors.textMuted, fontWeight: '700' },
   reviewTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 6 },
   reviewBody: { fontSize: 13, color: colors.textMuted, marginBottom: 14, lineHeight: 19 },
   pendingCard: {
@@ -545,4 +652,54 @@ const styles = StyleSheet.create({
   aiBtnDisabled: { opacity: 0.6 },
   aiBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   aiHint: { fontSize: 12, color: colors.textMuted, marginTop: 8, lineHeight: 18 },
+  fixtureBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  fixtureBtnText: { fontSize: 13, color: colors.textMuted },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 18,
+    maxHeight: '80%',
+  },
+  modalTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 4 },
+  modalSubtitle: { fontSize: 12, color: colors.textMuted, marginBottom: 12, lineHeight: 18 },
+  fixtureList: { maxHeight: 360 },
+  fixtureThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: colors.bg,
+    marginRight: 12,
+  },
+  fixtureThumbEmpty: { alignItems: 'center', justifyContent: 'center' },
+  fixtureBody: { flex: 1 },
+  fixtureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    marginBottom: 8,
+  },
+  fixtureLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
+  fixtureDesc: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  fixtureMeta: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
 });

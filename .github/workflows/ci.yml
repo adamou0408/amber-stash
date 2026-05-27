@@ -1,0 +1,53 @@
+name: CI
+
+# Tier 1-3 自動化驗收（型別 / 單元 / 建置）+ client bundle secret 掃描。
+# 對應 docs/development-plan.md「驗收手法總則」與佈署計畫 Phase 0。
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# 同一分支連續 push 時，取消前一輪未跑完的 CI。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      # Tier 1 — 型別
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Tier 3 — 單元
+      - name: Unit tests
+        run: npm test
+
+      # Tier 2 — 建置（web export）。EXPO_OFFLINE 避免 CI 觸網而 flaky。
+      - name: Web export
+        run: npm run build:web
+        env:
+          EXPO_OFFLINE: '1'
+          EXPO_NO_TELEMETRY: '1'
+
+      # 資安 gate — client bundle 不得含 Anthropic key 前綴（Phase 2→3 gate 的自動化防線）。
+      - name: Scan bundle for leaked API keys
+        run: |
+          if grep -rlI 'sk-ant-' dist/; then
+            echo "::error::在 web bundle 內發現 'sk-ant-' 前綴 — API key 可能外洩進 client build。"
+            exit 1
+          fi
+          echo "OK：bundle 內未發現 API key 前綴。"
