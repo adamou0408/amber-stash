@@ -1,0 +1,17 @@
+# Amber Stash AI proxy — 多階段 build：編 TS → 只帶 prod deps 進 runtime。
+FROM node:20-bookworm-slim AS builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install --no-audit --no-fund
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
+
+FROM node:20-bookworm-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package.json package-lock.json* ./
+RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
+COPY --from=builder /app/dist ./dist
+EXPOSE 8787
+CMD ["node", "dist/index.js"]
