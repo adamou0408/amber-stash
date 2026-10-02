@@ -1,0 +1,58 @@
+{
+  "scenarios": [
+    {
+      "id": "wardrobe-clothing",
+      "label": "衣櫃 — 日常衣物",
+      "description": "長袖、毛衣、牛仔褲",
+      "spaceKind": "wardrobe",
+      "detections": [
+        { "name": "長袖襯衫", "category": "clothing", "quantity": 5, "confidence": 0.88, "bbox": { "x": 0.05, "y": 0.1, "w": 0.25, "h": 0.3 } },
+        { "name": "針織毛衣", "category": "clothing", "quantity": 3, "confidence": 0.78, "bbox": { "x": 0.35, "y": 0.1, "w": 0.25, "h": 0.3 } },
+        { "name": "牛仔褲", "category": "clothing", "quantity": 2, "confidence": 0.7, "bbox": { "x": 0.65, "y": 0.1, "w": 0.25, "h": 0.3 } }
+      ]
+    },
+    {
+      "id": "desk-stationery",
+      "label": "書桌 — 文具",
+      "description": "開放的筆記本與一堆筆",
+      "spaceKind": "desk",
+      "detections": [
+        { "name": "筆記本", "category": "books", "quantity": 1, "confidence": 0.9, "bbox": { "x": 0.1, "y": 0.2, "w": 0.45, "h": 0.55 } },
+        { "name": "原子筆", "category": "books", "quantity": 3, "confidence": 0.82, "bbox": { "x": 0.6, "y": 0.25, "w": 0.25, "h": 0.2 } },
+        { "name": "鉛筆", "category": "books", "quantity": 2, "confidence": 0.75, "bbox": { "x": 0.6, "y": 0.5, "w": 0.25, "h": 0.2 } }
+      ]
+    },
+    {
+      "id": "drawer-electronics",
+      "label": "抽屜 — 電子配件",
+      "description": "充電線與充電頭",
+      "spaceKind": "drawer",
+      "detections": [
+        { "name": "充電線", "category": "electronics", "quantity": 1, "confidence": 0.88, "bbox": { "x": 0.1, "y": 0.4, "w": 0.5, "h": 0.4 } },
+        { "name": "充電頭", "category": "electronics", "quantity": 1, "confidence": 0.86, "bbox": { "x": 0.55, "y": 0.2, "w": 0.3, "h": 0.4 } }
+      ]
+    },
+    {
+      "id": "kitchen-storage",
+      "label": "廚房 — 抽屜餐具",
+      "description": "馬克杯、餐盤、餐具組",
+      "spaceKind": "other",
+      "detections": [
+        { "name": "馬克杯", "category": "kitchen", "quantity": 4, "confidence": 0.85, "bbox": { "x": 0.05, "y": 0.1, "w": 0.3, "h": 0.4 } },
+        { "name": "餐盤", "category": "kitchen", "quantity": 3, "confidence": 0.82, "bbox": { "x": 0.4, "y": 0.1, "w": 0.3, "h": 0.4 } },
+        { "name": "餐具組", "category": "kitchen", "quantity": 1, "confidence": 0.78, "bbox": { "x": 0.05, "y": 0.55, "w": 0.6, "h": 0.35 } }
+      ]
+    },
+    {
+      "id": "low-confidence-mix",
+      "label": "（測試）低信心混合",
+      "description": "用來測試低信心警示 UI",
+      "spaceKind": "other",
+      "detections": [
+        { "name": "不明小物 A", "category": "other", "quantity": 1, "confidence": 0.45 },
+        { "name": "不明小物 B", "category": "other", "quantity": 2, "confidence": 0.38 },
+        { "name": "雜物盒", "category": "tools", "quantity": 1, "confidence": 0.55 }
+      ]
+    }
+  ]
+}

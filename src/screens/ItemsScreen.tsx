@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -82,14 +83,12 @@ export function ItemsScreen({ navigation }: Props) {
         }
         renderItem={({ item }) => {
           const space = item.spaceId ? spaceById.get(item.spaceId) : undefined;
+          const onDelete = async () => {
+            await deleteItem(item.id);
+            setItems((prev) => prev?.filter((it) => it.id !== item.id) ?? null);
+          };
           return (
-            <Pressable
-              style={styles.row}
-              onLongPress={async () => {
-                await deleteItem(item.id);
-                setItems((prev) => prev?.filter((it) => it.id !== item.id) ?? null);
-              }}
-            >
+            <Pressable style={styles.row} onLongPress={onDelete}>
               {item.photoUri ? (
                 <Image source={{ uri: item.photoUri }} style={styles.thumb} />
               ) : (
@@ -110,6 +109,18 @@ export function ItemsScreen({ navigation }: Props) {
                   </View>
                 ) : null}
               </View>
+              <Pressable
+                onPress={() => {
+                  Alert.alert('刪除這筆？', item.name, [
+                    { text: '取消', style: 'cancel' },
+                    { text: '刪除', style: 'destructive', onPress: onDelete },
+                  ]);
+                }}
+                style={styles.delBtn}
+                hitSlop={8}
+              >
+                <Text style={styles.delBtnText}>✕</Text>
+              </Pressable>
             </Pressable>
           );
         }}
@@ -165,4 +176,14 @@ const styles = StyleSheet.create({
   },
   spacePillText: { fontSize: 11, color: colors.text },
   footer: { padding: 16, paddingBottom: 24 },
+  delBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.card,
+    marginLeft: 8,
+  },
+  delBtnText: { fontSize: 14, color: colors.textMuted, fontWeight: '700' },
 });

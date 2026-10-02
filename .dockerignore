@@ -1,0 +1,35 @@
+# 不要把 host 端的 node_modules 塞進 build context
+# （Windows host 的 node_modules 跟 Linux container 不相容，且體積大）
+node_modules
+.expo
+dist
+web-build
+.metro-health-check*
+
+# git / IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# 環境變數實檔不進 image（執行期由 docker compose env_file 注入）
+.env
+.env.*
+!.env.example
+
+# 日誌、暫存
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+
+# 原生平台輸出
+ios
+android
+*.tsbuildinfo
+
+# Docker 本身（避免遞迴）
+Dockerfile
+docker-compose.yml
+.dockerignore

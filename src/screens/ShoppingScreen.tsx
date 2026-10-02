@@ -119,29 +119,44 @@ export function ShoppingScreen() {
             <Text style={{ color: colors.textMuted }}>購物清單還是空的。</Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.itemRow}
-            onPress={async () => {
-              await toggleShoppingDone(item.id);
-              setItems((prev) =>
-                prev?.map((it) => (it.id === item.id ? { ...it, done: !it.done } : it)) ?? null,
-              );
-            }}
-            onLongPress={async () => {
-              await deleteShoppingItem(item.id);
-              setItems((prev) => prev?.filter((it) => it.id !== item.id) ?? null);
-            }}
-          >
-            <View style={[styles.checkbox, item.done && styles.checkboxDone]}>
-              {item.done ? <Text style={styles.check}>✓</Text> : null}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.itemName, item.done && styles.itemNameDone]}>{item.name}</Text>
-              {item.reason ? <Text style={styles.itemReason}>{item.reason}</Text> : null}
-            </View>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const onDelete = async () => {
+            await deleteShoppingItem(item.id);
+            setItems((prev) => prev?.filter((it) => it.id !== item.id) ?? null);
+          };
+          return (
+            <Pressable
+              style={styles.itemRow}
+              onPress={async () => {
+                await toggleShoppingDone(item.id);
+                setItems((prev) =>
+                  prev?.map((it) => (it.id === item.id ? { ...it, done: !it.done } : it)) ?? null,
+                );
+              }}
+              onLongPress={onDelete}
+            >
+              <View style={[styles.checkbox, item.done && styles.checkboxDone]}>
+                {item.done ? <Text style={styles.check}>✓</Text> : null}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.itemName, item.done && styles.itemNameDone]}>{item.name}</Text>
+                {item.reason ? <Text style={styles.itemReason}>{item.reason}</Text> : null}
+              </View>
+              <Pressable
+                onPress={() => {
+                  Alert.alert('刪除這項？', item.name, [
+                    { text: '取消', style: 'cancel' },
+                    { text: '刪除', style: 'destructive', onPress: onDelete },
+                  ]);
+                }}
+                style={styles.delBtn}
+                hitSlop={8}
+              >
+                <Text style={styles.delBtnText}>✕</Text>
+              </Pressable>
+            </Pressable>
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -215,4 +230,14 @@ const styles = StyleSheet.create({
   itemNameDone: { textDecorationLine: 'line-through', color: colors.textMuted },
   itemReason: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: 30 },
+  delBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+    marginLeft: 8,
+  },
+  delBtnText: { fontSize: 14, color: colors.textMuted, fontWeight: '700' },
 });

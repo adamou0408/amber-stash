@@ -1,0 +1,40 @@
+# docker compose up   → 啟動 Expo dev server
+# 瀏覽器開 http://localhost:8081 即可看到 web 版（修改檔案會自動 Fast Refresh）
+#
+# 想用 Expo Go / 真機連 Metro：把下方 REACT_NATIVE_PACKAGER_HOSTNAME 註解打開，
+# 填入 host 機器在區網的 IP（手機跟電腦要在同一個 wifi）。
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: amber-stash-dev
+    ports:
+      - "8081:8081"     # Metro bundler / web
+    volumes:
+      # 把 source code bind mount 進去 → 改檔案後 container 內 metro 會偵測到
+      - .:/app
+      # node_modules 用 named volume 隔離，避免 Windows host 的 node_modules
+      # 覆蓋掉 container 內 Linux 版（native binding 不相容會直接爆炸）
+      - amber_node_modules:/app/node_modules
+      # 同樣隔離 .expo 暫存
+      - amber_expo_cache:/app/.expo
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - EXPO_NO_TELEMETRY=1
+      # 真機連線時填上 host IP（用 ipconfig / ifconfig 查）。
+      # 換 wifi / 換機器時記得更新。
+      - REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.107
+    # .env 設為 optional（需要 Docker Compose v2.24+ / Docker Desktop 4.27+）。
+    # 沒有 .env 也能跑 — AI backend 會 fallback 到 mock 模式。
+    env_file:
+      - path: .env
+        required: false
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  amber_node_modules:
+  amber_expo_cache:

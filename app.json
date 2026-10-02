@@ -7,7 +7,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFF8EE"
     },
@@ -22,6 +24,7 @@
     "android": {
       "package": "com.amberstash.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFF8EE"
       },
       "edgeToEdgeEnabled": true,
@@ -29,7 +32,8 @@
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [

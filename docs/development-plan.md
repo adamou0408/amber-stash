@@ -138,7 +138,7 @@
 ### Step 5 · 動工前的三問
 - **這項目在「現況 Snapshot」哪個 section？** 已 ship / 已延後 / 未啟動？
 - **驗收標準是什麼？** 看對應 milestone 段落的「驗收標準」
-- **動完要怎麼驗證？** 至少跑驗收三層（tsc / jest / web bundle），標 `[x]`、commit + push
+- **動完要怎麼驗證？** 跑驗收 tier 1-3（tsc / bundle / jest），動到 screen 就**必須**加跑 tier 4（Chrome 點過清單，見「驗收手法總則」），標 `[x]`、commit + push
 
 ### Step 6 · ship 後一定要做
 - 在「現況 Snapshot」對應條目把 `[ ]` 改成 `[x]`
@@ -151,15 +151,40 @@
 
 ## 驗收手法總則
 
-### 五層驗收層級（每個 milestone 至少跑前 3 層）
+### 五層驗收層級
 
-| 層 | 名稱 | 用什麼跑 | 目的 |
-|---|---|---|---|
-| 1 | **型別** | `npx tsc --noEmit` | 介面與資料模型不破壞 |
-| 2 | **建置** | `EXPO_OFFLINE=1 npx expo export --platform web --output-dir /tmp/web-build` | 整個 bundle 編得起來 |
-| 3 | **單元** | Jest（M4 起導入） | 純函式邏輯正確（規則評估、IOU 去重、模板填詞） |
-| 4 | **手動 E2E** | dev server + Chrome / 實機 | 真實 UX 跑得通 |
-| 5 | **使用者煙霧測試** | 找 3 位非團隊成員 | 不被內部視角污染的真實反饋 |
+| 層 | 名稱 | 用什麼跑 | 目的 | 何時必跑 |
+|---|---|---|---|---|
+| 1 | **型別** | `npx tsc --noEmit` | 介面與資料模型不破壞 | 每個 milestone |
+| 2 | **建置** | `EXPO_OFFLINE=1 npx expo export --platform web --output-dir /tmp/web-build` | 整個 bundle 編得起來 | 每個 milestone |
+| 3 | **單元** | Jest（M4 起導入） | 純函式邏輯正確（規則評估、IOU 去重、模板填詞） | 每個 milestone |
+| 4 | **手動 E2E** | dev server + Chrome / 實機 | 真實 UX 跑得通 | **凡是動到 screen / component 就必跑** |
+| 5 | **使用者煙霧測試** | 找 3 位非團隊成員 | 不被內部視角污染的真實反饋 | demo 前 |
+
+> ⚠️ **歷史教訓（2026-05-21 補入）**：M1-M5 多數驗收只跑 tier 1-3，tier 4 被當「optional」跳過。
+> 結果累積了 10+ 個 UI 入口的 silent failure（`Alert.alert` 在 react-native-web 上 no-op、`onLongPress` 在桌機不可靠、`expo-print` web 無 fallback…）。
+> bundle 編得過 ≠ app 跑得起來。**動到 screen 卻沒跑 tier 4 = 沒驗收完。**
+
+### Tier 4 「Chrome 手動點過清單」格式（動到 screen 必填）
+
+開 dev server → chrome 進 `http://localhost:8081` → 對每個 user-triggered 入口逐項點過，產出下表貼進 commit message 或 PR description：
+
+| Screen | 入口（按鈕 / 表單 / 長按 / chip） | 動作 | 預期 | 實際 |
+|---|---|---|---|---|
+| (例) ItemsScreen | ＋新增物品 | click | navigate to AddItem | ✅ |
+| (例) ItemsScreen | 列項刪除 ✕ | click | 跳 confirm → 刪除 | ✅ |
+| (例) AddItem | 儲存（空名）| click | 跳「名稱必填」 | ❌ silent → 補 Alert polyfill |
+
+規則：
+- 每個動到的 screen 至少列 1 個入口。完整 milestone 應列**所有**新增 / 修改 entry。
+- silent fail（按了沒視覺回饋 + console 沒 error）等同 bug，當 PR 內修掉，不延後。
+- 對 web-only 限制（camera / native print）→ 改成顯式提示（`Alert.alert('web 不支援，請用真機')`），不能讓用戶按了沒事。
+
+### 為什麼是「open it and click」這麼樸素
+
+過去半年累積的 UI bug，沒有一個是 `tsc` / jest / bundle compile 抓得到的。
+真正抓到的方法：30 秒打開瀏覽器、點一下、看反應。比寫單元測試便宜，比 CI 設定快，比假設 root cause 準確。
+這就是 tier 4 從「optional」升 mandatory 的理由。
 
 ### 通用驗收三問
 

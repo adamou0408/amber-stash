@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -77,7 +78,20 @@ export function LabelsScreen() {
     setBusy(true);
     try {
       const html = await buildLabelHtml(selectedList, await makeOptions());
-      await Print.printAsync({ html });
+      if (Platform.OS === 'web') {
+        // expo-print 在 web 沒有實作，自己開新視窗觸發瀏覽器列印
+        const win = window.open('', '_blank');
+        if (!win) {
+          Alert.alert('彈窗被擋', '請在瀏覽器允許彈窗後再試一次。');
+          return;
+        }
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        setTimeout(() => win.print(), 400);
+      } else {
+        await Print.printAsync({ html });
+      }
     } catch (err) {
       Alert.alert('列印失敗', err instanceof Error ? err.message : String(err));
     } finally {
@@ -88,6 +102,13 @@ export function LabelsScreen() {
   async function onSharePdf() {
     if (selectedList.length === 0) {
       Alert.alert('請先選擇至少一個空間');
+      return;
+    }
+    if (Platform.OS === 'web') {
+      Alert.alert(
+        'Web 不支援產生 PDF',
+        '請用「預覽 / 列印」開瀏覽器列印視窗，在裡面選「另存為 PDF」。\n或在手機 App 內使用此功能。',
+      );
       return;
     }
     setBusy(true);
