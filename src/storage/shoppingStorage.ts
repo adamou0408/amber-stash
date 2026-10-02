@@ -1,42 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import uuid from 'react-native-uuid';
 import type { ShoppingItem } from '@/types';
-import { STORAGE_KEYS } from './keys';
+import { repositories } from './repositories';
 
-export async function loadShopping(): Promise<ShoppingItem[]> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEYS.shopping);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as ShoppingItem[];
-  } catch {
-    return [];
-  }
-}
+/**
+ * Thin shim — delegate 到 repositories.shopping。
+ * 保留原本 named export 介面，讓既有 screens / services 0 改動。
+ */
+export const loadShopping = (): Promise<ShoppingItem[]> => repositories.shopping.loadShopping();
 
-async function saveAll(items: ShoppingItem[]) {
-  await AsyncStorage.setItem(STORAGE_KEYS.shopping, JSON.stringify(items));
-}
+export const addShoppingItem = (name: string, reason?: string): Promise<ShoppingItem> =>
+  repositories.shopping.addShoppingItem(name, reason);
 
-export async function addShoppingItem(name: string, reason?: string): Promise<ShoppingItem> {
-  const items = await loadShopping();
-  const item: ShoppingItem = {
-    id: String(uuid.v4()),
-    name,
-    reason,
-    done: false,
-    createdAt: Date.now(),
-  };
-  await saveAll([item, ...items]);
-  return item;
-}
+export const toggleShoppingDone = (id: string): Promise<void> =>
+  repositories.shopping.toggleShoppingDone(id);
 
-export async function toggleShoppingDone(id: string): Promise<void> {
-  const items = await loadShopping();
-  const next = items.map((it) => (it.id === id ? { ...it, done: !it.done } : it));
-  await saveAll(next);
-}
-
-export async function deleteShoppingItem(id: string): Promise<void> {
-  const items = await loadShopping();
-  await saveAll(items.filter((it) => it.id !== id));
-}
+export const deleteShoppingItem = (id: string): Promise<void> =>
+  repositories.shopping.deleteShoppingItem(id);

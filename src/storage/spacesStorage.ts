@@ -1,30 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import uuid from 'react-native-uuid';
 import type { Space } from '@/types';
-import { STORAGE_KEYS } from './keys';
+import { repositories } from './repositories';
 
-export async function loadSpaces(): Promise<Space[]> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEYS.spaces);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as Space[];
-  } catch {
-    return [];
-  }
-}
+/**
+ * Thin shim — delegate 到 repositories.spaces。
+ * 保留原本 named export 介面，讓既有 screens / services 0 改動。
+ */
+export const loadSpaces = (): Promise<Space[]> => repositories.spaces.loadSpaces();
 
-async function saveAll(spaces: Space[]) {
-  await AsyncStorage.setItem(STORAGE_KEYS.spaces, JSON.stringify(spaces));
-}
+export const addSpace = (input: Omit<Space, 'id' | 'createdAt'>): Promise<Space> =>
+  repositories.spaces.addSpace(input);
 
-export async function addSpace(input: Omit<Space, 'id' | 'createdAt'>): Promise<Space> {
-  const spaces = await loadSpaces();
-  const space: Space = { ...input, id: String(uuid.v4()), createdAt: Date.now() };
-  await saveAll([space, ...spaces]);
-  return space;
-}
-
-export async function deleteSpace(id: string): Promise<void> {
-  const spaces = await loadSpaces();
-  await saveAll(spaces.filter((s) => s.id !== id));
-}
+export const deleteSpace = (id: string): Promise<void> => repositories.spaces.deleteSpace(id);

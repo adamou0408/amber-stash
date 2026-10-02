@@ -20,13 +20,16 @@ const AsyncStorageMock = {
   async getAllKeys(): Promise<readonly string[]> {
     return Array.from(store.keys());
   },
-  async multiGet(keys: readonly string[]): Promise<[string, string | null][]> {
-    return keys.map((k) => [k, store.has(k) ? (store.get(k) as string) : null]);
+  // v3 batch API（與 @react-native-async-storage/async-storage ^3 對齊）
+  async getMany(keys: readonly string[]): Promise<Record<string, string | null>> {
+    const out: Record<string, string | null> = {};
+    for (const k of keys) out[k] = store.has(k) ? (store.get(k) as string) : null;
+    return out;
   },
-  async multiSet(pairs: readonly [string, string][]): Promise<void> {
-    for (const [k, v] of pairs) store.set(k, v);
+  async setMany(entries: Record<string, string>): Promise<void> {
+    for (const [k, v] of Object.entries(entries)) store.set(k, v);
   },
-  async multiRemove(keys: readonly string[]): Promise<void> {
+  async removeMany(keys: readonly string[]): Promise<void> {
     for (const k of keys) store.delete(k);
   },
   /** test helper — not part of real API */
