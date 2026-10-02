@@ -1,0 +1,68 @@
+name: Deploy (self-hosted VPS)
+
+# Phase 4 CD — 把 web PWA + AI proxy 部署到自架 VPS。
+#
+# 目前是 **手動觸發**（workflow_dispatch）：VPS / 網域備妥、且設好下列 repo secrets 後再用。
+# 這樣在 VPS 就緒前不會自動失敗。要改成 main 合併自動部署，把 push 段取消註解即可。
+#
+# 需要的 repo secrets：
+#   DEPLOY_HOST      VPS 位址（IP 或主機名）
+#   DEPLOY_USER      SSH 使用者
+#   DEPLOY_SSH_KEY   私鑰（對應 VPS 上的 authorized_keys）
+#   DEPLOY_PATH      VPS 上的專案路徑（已 git clone + 放好 .env.prod）
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install + build web PWA
+        run: |
+          npm ci
+          npm run build:web
+        env:
+          EXPO_OFFLINE: '1'
+          EXPO_NO_TELEMETRY: '1'
+          # client 走自架 proxy（key 不進 bundle）
+          EXPO_PUBLIC_AMBER_PROXY_URL: ${{ vars.AMBER_PROXY_URL }}
+
+      - name: Guard — bundle must not contain API key
+        run: |
+          if grep -rlI 'sk-ant-' dist/; then
+            echo "::error::web bundle 含 sk-ant- 前綴，中止部署。"
+            exit 1
+          fi
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync static build + compose config to VPS
+        run: |
+          rsync -az --delete -e "ssh -i ~/.ssh/id_deploy" \
+            dist Caddyfile docker-compose.prod.yml server \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      - name: Bring up prod stack on VPS
+        run: |
+          ssh -i ~/.ssh/id_deploy "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd ${{ secrets.DEPLOY_PATH }} && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build"

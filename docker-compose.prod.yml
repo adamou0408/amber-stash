@@ -1,0 +1,51 @@
+# Amber Stash 生產 stack（Phase 4）— 自架單機。
+#
+#   Caddy（auto-TLS reverse proxy）─┬─ /        → 靜態 web PWA（dist/）
+#                                   └─ /api/*   → AI proxy 容器
+#
+# 部署前置：
+#   1. 一台有 Docker 的 VPS、開放 80/443。
+#   2. 網域 DNS A record 指向 VPS IP。
+#   3. server 上備好 .env.prod（見 .env.prod.example），含 ANTHROPIC_API_KEY、AMBER_DOMAIN。
+#   4. 先在本機或 CI 跑 `npm run build:web` 產出 dist/，連同 repo 一起部署到 server。
+#
+# 啟動：docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# 本機 routing 煙霧測試（無網域、無 TLS）：
+#   AMBER_DOMAIN=:80 docker compose -f docker-compose.prod.yml up -d --build
+#   然後 curl http://localhost/ 與 http://localhost/health
+
+services:
+  caddy:
+    image: caddy:2
+    container_name: amber-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # 部署時 = 你的網域；本機測試可設 :80
+      - AMBER_DOMAIN=${AMBER_DOMAIN:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./dist:/srv/www:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - proxy
+
+  proxy:
+    build:
+      context: ./server/proxy
+      dockerfile: Dockerfile
+    container_name: amber-proxy
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    expose:
+      - "8787"
+    # 不對外 publish port —— 只透過 Caddy /api/* 進來。
+
+volumes:
+  caddy_data:
+  caddy_config:
