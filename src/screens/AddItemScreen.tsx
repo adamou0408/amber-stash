@@ -69,9 +69,14 @@ export function AddItemScreen({ navigation }: Props) {
 
   // ---------- fixture picker (dev / web 用，跳過相機直接注入假資料) ----------
   const [fixturePickerOpen, setFixturePickerOpen] = useState(false);
-  const fixtures = useMemo<FixtureScenario[]>(() => listFixtures(), []);
-  /** 載入 fixture 時記錄它的展示照片（Metro asset module ID），讓 photoBox 也顯示出來。 */
-  const [fixturePhoto, setFixturePhoto] = useState<number | undefined>();
+  /**
+   * 開啟 picker 時 freeze 一份 fixture list — 每次打開都重新洗牌，但開著的時候不要動。
+   * 不打開時不 build,省 listFixtures() 隨機抽圖的 cost。
+   */
+  const fixtures = useMemo<FixtureScenario[]>(
+    () => (fixturePickerOpen ? listFixtures() : []),
+    [fixturePickerOpen],
+  );
 
   useEffect(() => {
     loadSpaces().then(setSpaces);
@@ -96,7 +101,6 @@ export function AddItemScreen({ navigation }: Props) {
     if (photo?.uri) {
       setPhotoUri(photo.uri);
       setPhotoBase64(photo.base64);
-      setFixturePhoto(undefined);
       setCameraOpen(false);
       setAiHint(undefined);
     }
@@ -111,7 +115,6 @@ export function AddItemScreen({ navigation }: Props) {
     if (!result.canceled && result.assets[0]) {
       setPhotoUri(result.assets[0].uri);
       setPhotoBase64(result.assets[0].base64 ?? undefined);
-      setFixturePhoto(undefined);
       setAiHint(undefined);
     }
   }
@@ -127,13 +130,13 @@ export function AddItemScreen({ navigation }: Props) {
     }
     setFixturePickerOpen(false);
     setPendings((prev) => [...scenario.detections, ...prev]);
-    // 用 fixture 的展示照片取代 photoBox（真實相機 / 相簿來源優先，這裡走 fallback）
-    setPhotoUri(undefined);
-    setPhotoBase64(undefined);
-    setFixturePhoto(scenario.photo);
+    // 把這次 pick 中的代表照片塞進 photoUri,跟 Modal 看到的縮圖同一張
+    setPhotoUri(scenario.pickedPhotoUrl);
+    setPhotoBase64(undefined); // fixture 沒有 base64,不能跑 AI recognize
     const lowConf = scenario.detections.filter((d) => d.confidence < 0.6).length;
     const lowConfLabel = lowConf > 0 ? ` · ${lowConf} 筆低信心` : '';
-    setAiHint(`✓ 載入 fixture「${scenario.label}」（${scenario.detections.length} 筆）${lowConfLabel}`);
+    const poolLabel = scenario.photos.length > 0 ? ` · 圖庫 ${scenario.photos.length} 張隨機` : '';
+    setAiHint(`✓ 載入 fixture「${scenario.label}」（${scenario.detections.length} 筆）${lowConfLabel}${poolLabel}`);
   }
 
   async function onRecognize() {
@@ -180,7 +183,6 @@ export function AddItemScreen({ navigation }: Props) {
     setNote('');
     setPhotoUri(undefined);
     setPhotoBase64(undefined);
-    setFixturePhoto(undefined);
   }
 
   /**
@@ -344,8 +346,6 @@ export function AddItemScreen({ navigation }: Props) {
         <View style={styles.photoBox}>
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} />
-          ) : fixturePhoto ? (
-            <Image source={fixturePhoto} style={styles.photo} />
           ) : (
             <Text style={styles.photoHint}>還沒有照片</Text>
           )}
@@ -516,8 +516,8 @@ export function AddItemScreen({ navigation }: Props) {
                   onPress={() => onPickFixture(f)}
                   style={styles.fixtureRow}
                 >
-                  {f.photo ? (
-                    <Image source={f.photo} style={styles.fixtureThumb} />
+                  {f.pickedPhotoUrl ? (
+                    <Image source={{ uri: f.pickedPhotoUrl }} style={styles.fixtureThumb} />
                   ) : (
                     <View style={[styles.fixtureThumb, styles.fixtureThumbEmpty]}>
                       <Text style={styles.photoHint}>無照片</Text>
@@ -528,7 +528,10 @@ export function AddItemScreen({ navigation }: Props) {
                     {f.description ? (
                       <Text style={styles.fixtureDesc}>{f.description}</Text>
                     ) : null}
-                    <Text style={styles.fixtureMeta}>{f.detections.length} 筆 detection</Text>
+                    <Text style={styles.fixtureMeta}>
+                      {f.detections.length} 筆 detection
+                      {f.photos.length > 0 ? ` · 圖庫 ${f.photos.length} 張` : ''}
+                    </Text>
                   </View>
                 </Pressable>
               ))}

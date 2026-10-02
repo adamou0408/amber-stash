@@ -51,3 +51,30 @@ jobs:
             exit 1
           fi
           echo "OK：bundle 內未發現 API key 前綴。"
+
+  # 獨立的 AI proxy（server/proxy）有自己的 deps / tsconfig / 測試，
+  # 主 job 看不到它 —— 沒這個 job 等於資安 gate 只做一半（client 乾淨但 proxy 未驗）。
+  proxy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/proxy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/proxy/package-lock.json
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
